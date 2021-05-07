@@ -6,28 +6,69 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class ForeignKeyComboPair extends JPanel {
     private String foreignKey = "";
     private JLabel label = null;
-    private JComboBox<String> comboBox = null;
+    private JComboBox<String> comboBox = new JComboBox<>();
+    private List<String> names = null;
+    private String tableName = "";
+
 
     public ForeignKeyComboPair(String key) {
+        tableName = findTableName(foreignKey);
+        names = findNames(tableName);
         foreignKey = key;
         this.setLayout(new GridLayout(1, 2));
-        this.setMaximumSize(new Dimension(800,20));
-        label = new JLabel(key.replace("_ID",""));
+        this.setMaximumSize(new Dimension(800, 20));
+        label = new JLabel(key.replace("_ID", ""));
         this.add(label);
-        UpdateComboBox();
+        updateComboBox();
         this.add(comboBox);
     }
-    //TODO
-    public void UpdateComboBox(){
-        String tableName = FindTableName(foreignKey);
-        List<String> names = FindNames(tableName);
-        String sql = "select "+names.get(0)+" from "+tableName;
+
+    //намира името на таблицата с което се идентифицира обекта, например име на човек
+    //todo edit?
+    //todo add Cyrillic
+    private List<String> findNames(String tableName) {
+        names = new LinkedList<String>();
+        final List<String> columnNames = DBTool.getInstance().getColumnNames(tableName);
+        String fNameColumn = "";
+        int shortestHamming = Integer.MAX_VALUE;
+        for (String name : columnNames) {
+            if(!name.toLowerCase().contains("name")){
+                continue;
+            }
+            //todo redundant?
+            int distance = Tools.HammingDistance("name", name.toLowerCase());
+            if (distance < shortestHamming) {
+                shortestHamming = distance;
+                fNameColumn = name;
+            }
+        }
+        names.add(fNameColumn);
+        return names;
+    }
+
+    //намира как се казва таблицата от ключа
+    private String findTableName(String key) {
+        int shortestHamming = Integer.MAX_VALUE;
+        List<String> list = DBTool.getInstance().getTableNames();
+        for (String name : list) {
+            int distance = Tools.HammingDistance(key, name.toLowerCase());
+            if (distance < shortestHamming) {
+                shortestHamming = distance;
+                tableName = name; //todo add more than 1 foreign key
+            }
+        }
+        return tableName;
+    }
+
+    //TODO clean up
+    public void updateComboBox() {
+        String sql = "select " + names.get(0) + " from " + tableName;
         try {
             Connection connection = DBTool.getInstance().getConnection();
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -36,7 +77,7 @@ public class ForeignKeyComboPair extends JPanel {
             //todo see wtf is this?
             ResultSet set = statement.executeQuery();
             comboBox.removeAllItems();
-            while (set.next()){
+            while (set.next()) {
                 comboBox.addItem(set.getString(1));
             }
         } catch (SQLException sqlException) {
@@ -44,29 +85,6 @@ public class ForeignKeyComboPair extends JPanel {
         }
         //todo get values for combo box
         //TODO combobox (editable taka че за search), с който да си свързвам нещата йоо
-    }
-    private static List<String> FindNames(String tableName){
-        final List<String> columnNames = DBTool.getInstance().getColumnNames(tableName);
-        String fNameColumn = "";
-        int shortestHamming = Integer.MAX_VALUE;
-        for (String name : columnNames){
-            if(Tools.HammingDistance("fname",name.toLowerCase())<shortestHamming){
-                fNameColumn = name;
-            }
-        }
-        columnNames.add(fNameColumn);
-        return columnNames;
-    }
-    private static String FindTableName(String key){
-        String tableName = "";
-        int shortestHamming = Integer.MAX_VALUE;
-        List<String> list = DBTool.getInstance().getTableNames();
-        for(String name : list){
-            if(Tools.HammingDistance(key,name)<shortestHamming){
-                tableName = name;
-            }
-        }
-        return tableName;
     }
 
 

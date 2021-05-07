@@ -9,6 +9,7 @@ import java.awt.*;
 import java.util.LinkedList;
 import java.util.List;
 
+//todo update combo box on tab click
 public class CRUDPanel extends JPanel {
     private String tableName = "";
     private String idColumnName = "";
@@ -17,12 +18,12 @@ public class CRUDPanel extends JPanel {
     private List<String> columnNames = new LinkedList<>();
     private JTable table = new JTable();
     private JScrollPane scrollPlane = new JScrollPane(table);
-
     private JComboBox<String> searchCombo = new MemoryComboBox<>();
-    private JButton searchBtn = new JButton("Търси");
     private JButton addBtn = new JButton("Добавяне");
     private JButton delBtn = new JButton("Изтриване");
     private JButton editBtn = new JButton("Редактиране");
+    private JButton searchBtn = new JButton("Търси");
+    private JComboBox<String> searchBar = new MemoryComboBox<>();
 
     public CRUDPanel(String tableName) {
         this.tableName = tableName;
@@ -31,39 +32,29 @@ public class CRUDPanel extends JPanel {
         for (String name : columnNames) {
             this.add(new PairMaker(name));
         }
-        for(String name : foreignIdColumnNames){
+        for (String name : foreignIdColumnNames) {
             this.add(new ForeignKeyComboPair(name));
         }
-        //---Middle Panel
-        //по default панелите имат flow layout
-/*        midPanel.add(addBtn);
-        midPanel.add(delBtn);
-        midPanel.add(editBtn);
-        midPanel.add(searchCombo);
-        midPanel.add(searchBtn);
-
-        this.add(midPanel);*/
-
-
+        //---Button panel
+        JPanel buttonHolder = new JPanel();
+        buttonHolder.setLayout(new BoxLayout(buttonHolder, BoxLayout.X_AXIS));
+        buttonHolder.add(addBtn);
+        buttonHolder.add(delBtn);
+        buttonHolder.add(editBtn);
+        buttonHolder.add(searchBtn);
+        this.add(buttonHolder);
         //---Down Panel
-        //scrollPlane.setPreferredSize(new Dimension(450, 150));
-        scrollPlane.setMinimumSize(new Dimension(450, 150));
-        // botPanel.add(scrollPlane);
-        //scrollPlane
-        //  this.add(botPanel);
+
+        scrollPlane.setPreferredSize(new Dimension(450, 150));
         System.out.println(idColumnName + " " + tableName);
         System.out.println(foreignIdColumnNames.toString() + " " + tableName);
+        //пълним table първоначално
+        table.setModel(DBTool.getInstance().getModelForColumns(columnNames, tableName));
+        this.add(scrollPlane);
         this.setVisible(true);
     }
 
     private void filterColumnNames() { //малко ми изглежда тежко, така че ще е хубаво само да се изпълнява веднъж
-        /*String sql = "SELECT COLUMN_NAME " +
-                "FROM INFORMATION_SCHEMA.COLUMNS " +
-                "WHERE TABLE_NAME = ? " +
-                "ORDER BY ORDINAL_POSITION";
-        Connection connection = DBTool.getInstance().getConnection();
-        PreparedStatement statement = null;*/
-
 
         final List<String> resultSet = DBTool.getInstance().getColumnNames(tableName);
         for (String string : resultSet) {

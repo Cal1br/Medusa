@@ -1,6 +1,7 @@
 package utils;
 
 import javax.swing.*;
+import javax.swing.table.TableModel;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class DBTool {
     //init метод който зарежда configa в strings
@@ -129,6 +131,22 @@ public class DBTool {
         } catch (java.sql.SQLException sqlException) {
             sqlException.printStackTrace();
         }
+    }
+
+    public TableModel getModelForColumns(final List<String> columnNames, String tableName) {
+        MyModel model = null;
+        //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
+        String sql ="SELECT * FROM "+tableName;
+        try {
+            connection = getConnection();
+            sqlStatement = connection.prepareStatement(sql);
+            set = sqlStatement.executeQuery();
+            model = new MyModel(set);
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return model;
     }
 
     /*public MyModel getAllData(String tableName) {
