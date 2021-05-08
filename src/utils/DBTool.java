@@ -1,5 +1,7 @@
 package utils;
 
+import models.Column;
+
 import javax.swing.*;
 import javax.swing.table.TableModel;
 import java.io.FileInputStream;
@@ -71,6 +73,7 @@ public class DBTool {
         return tableNames;
 
     }
+    @Deprecated
     public List<String> getColumnNames(String tableName){
         List<String> list = new LinkedList<>();
         String sql = "SELECT COLUMN_NAME " +
@@ -84,6 +87,22 @@ public class DBTool {
             final ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()){
                 list.add(resultSet.getString(1));
+            }
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<Column> getColumnNamesAndType(String tableName){
+        List<Column> list = new LinkedList<>();
+        String sql = "SHOW COLUMNS FROM "+tableName;
+        PreparedStatement statement = null;
+        try {
+            statement = connection.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
+            final ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()){
+                list.add(new Column(resultSet.getNString(1),resultSet.getNString(2),resultSet.getBoolean(3)));
             }
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();

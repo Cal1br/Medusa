@@ -11,6 +11,9 @@ public class TabFrame extends JFrame {
     List<JPanel> panels = new LinkedList<>();
 
     public TabFrame(DBTool dbTool) {
+        this.setTitle("Medusa");
+        ImageIcon icon = new ImageIcon("src/medusa.png");
+        this.setIconImage(icon.getImage());
         this.dbTool = dbTool;
         this.setSize(750, 600);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
