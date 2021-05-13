@@ -199,6 +199,12 @@ public class DBTool {
         return list;
     }
 
+    public void executeSql(final String sql) throws SQLException {
+        connection = getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.execute();
+    }
+
     /*public MyModel getAllData(String tableName) {
         connection = getConnection();
         MyModel model = null;

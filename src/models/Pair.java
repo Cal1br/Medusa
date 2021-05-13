@@ -1,25 +1,32 @@
 package models;
 
 import utils.DataType;
+
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Locale;
 
 public class Pair extends JPanel {
+    private Column column = null;
     private JLabel label = null;
     private JTextField textField = null;
+    private boolean nullAllowed;
 
     public Pair(final Column column) {
-        final String columnName = column.getField();
-        final DataType type = column.getType();
+        this.column = column;
         this.setLayout(new GridLayout(1, 2));
         this.setMaximumSize(new Dimension(800, 20));
+        final String columnName = column.getField();
+        final DataType type = column.getType();
         label = new JLabel(columnName);
         this.add(label);
         JFormattedTextField formattedTextField = null;
+        nullAllowed = column.isNullAllowed();
         boolean isInt = false;
         switch (type) {
             /*The JFormattedTextField knows what default formatter to use based on the value type passed in.
@@ -37,7 +44,7 @@ public class Pair extends JPanel {
             case INTEGER:
                 isInt = true;
             case BIGINT:
-                NumberFormat nf = NumberFormat.getIntegerInstance();
+                NumberFormat nf = NumberFormat.getNumberInstance(Locale.ENGLISH);
                 NumberFormatter numberFormatter = new NumberFormatter(nf);
                 if (isInt) numberFormatter.setMaximum(Integer.MAX_VALUE);
                 else numberFormatter.setMaximum(Long.MAX_VALUE);
@@ -65,6 +72,31 @@ public class Pair extends JPanel {
         }
         this.add(textField);
     }
+//todo ENUM ili pf nz nqkaksi da vidim date li e tova int li e long li e nz nz. Switch za vseki h2 data type??
 
-    //todo ENUM ili pf nz nqkaksi da vidim date li e tova int li e long li e nz nz. Switch za vseki h2 data type??
+    public JLabel getLabel() {
+        return label;
+    }
+
+    public JTextField getTextField() {
+        return textField;
+    }
+    public String getFormattedTextFieldText(){
+        String st = textField.getText();
+        switch (column.getType()){
+            case INTEGER:
+            case BIGINT:
+                st = st.replaceAll(",","");
+            default:
+        }
+        return st;
+    }
+    public Column getColumn() {
+        return column;
+    }
+
+    public boolean isNullAllowed() {
+        return nullAllowed;
+    }
+
 }

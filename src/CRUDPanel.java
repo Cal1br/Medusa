@@ -3,17 +3,18 @@ import utils.DBTool;
 import utils.ForeignKeyComboPair;
 import utils.MemoryComboBox;
 import models.Pair;
-import utils.Tools;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
 //todo update combo box on tab click
+//todo UUID
 public class CRUDPanel extends JPanel {
     private String tableName = "";
     private String idColumn = "";
@@ -21,7 +22,7 @@ public class CRUDPanel extends JPanel {
     //TODO трябва да намеря начин да заредя idtata тука от таблицата
     private List<Long> idList = new LinkedList<>();
     private List<String> columnNames = new LinkedList<>();
-    private List<Column> columns = new LinkedList<>();
+    private List<Column> columns = new LinkedList<>(); //only filtered columns
     private List<Pair> pairs = new LinkedList<>();
     private JTable table = new JTable();
     private JScrollPane scrollPlane = new JScrollPane(table);
@@ -93,38 +94,24 @@ public class CRUDPanel extends JPanel {
         }
     }
 
-    //DONE I HAVE TO GET DATA TYPES BEFORE GETTING ANY FURTHER
-    @Deprecated
-    private void filterColumnNames() { //малко ми изглежда тежко, така че ще е хубаво само да се изпълнява веднъж
-        final List<String> resultSet = DBTool.getInstance().getColumnNames(tableName);
-        for (String string : resultSet) {
-            if (string.contains("ID")) { //should i check primary key with hamming distance? YES
-                if (Tools.HammingDistance(string, tableName + "_ID") < 4) {
-                    //boom primary key found
-                    //реално тука мога да заредя primary key-vete обаче ако са 20000+++, да няма да седяд в ram-ta
-                    idColumn = string;
-                } else {
-                    List<String> tableNames = DBTool.getInstance().getTableNames();
-                    for (String name : tableNames) {
-                        if (Tools.HammingDistance(name + "_ID", string) < 4) {
-                            foreignIdColumns.add(string);
-                            //ако не е primary проверяваме дали не е foreign отново с hamming distance и като сравняваме с имената на останалите таблици
-                        }
-                    }
-                }
-                //todo check foreign keys
-            } else if (string.equalsIgnoreCase("id")) {
-                idColumn = string;
-            } else {
-                columnNames.add(string);
-            }
-
-        }
-    }
-
     private class AddAction implements ActionListener {
         @Override
         public void actionPerformed(final ActionEvent e) {
+            StringBuilder columnsSb = new StringBuilder("INSERT INTO "+tableName+"(");
+            StringBuilder valuesSb = new StringBuilder(" VALUES (");
+            for(Pair pair : pairs){
+                columnsSb.append(pair.getColumn().getField()).append(", ");
+                valuesSb.append(pair.getFormattedTextFieldText()).append(", ");
+            }
+            columnsSb.replace(columnsSb.length()-2, columnsSb.length(),")");
+            valuesSb.replace(valuesSb.length()-2, valuesSb.length(),")");
+            columnsSb.append(valuesSb);
+            try{
+                DBTool.getInstance().executeSql(columnsSb.toString());
+            }catch (SQLException sqlException){
+                sqlException.printStackTrace();
+                //todo add error message
+            }
 
         }
     }
