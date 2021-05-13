@@ -86,8 +86,9 @@ public class Pair extends JPanel {
         switch (column.getType()){
             case INTEGER:
             case BIGINT:
-                st = st.replaceAll(",","");
+                return st.replaceAll(",","");
             default:
+                st = "\'"+st+"\'";
         }
         return st;
     }

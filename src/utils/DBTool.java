@@ -200,6 +200,7 @@ public class DBTool {
     }
 
     public void executeSql(final String sql) throws SQLException {
+        System.out.println(sql);
         connection = getConnection();
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.execute();

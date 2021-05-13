@@ -1,13 +1,17 @@
+package tabs;
+
 import models.Column;
+import models.Pair;
 import utils.DBTool;
 import utils.ForeignKeyComboPair;
 import utils.MemoryComboBox;
-import models.Pair;
+import utils.TableListener;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -18,19 +22,20 @@ import java.util.List;
 public class CRUDPanel extends JPanel {
     private String tableName = "";
     private String idColumn = "";
-    private List<String> foreignIdColumns = new LinkedList<>();
+    private final List<String> foreignIdColumns = new LinkedList<>();
     //TODO трябва да намеря начин да заредя idtata тука от таблицата
-    private List<Long> idList = new LinkedList<>();
-    private List<String> columnNames = new LinkedList<>();
-    private List<Column> columns = new LinkedList<>(); //only filtered columns
-    private List<Pair> pairs = new LinkedList<>();
-    private JTable table = new JTable();
-    private JScrollPane scrollPlane = new JScrollPane(table);
-    private JButton addBtn = new JButton("Добавяне");
-    private JButton delBtn = new JButton("Изтриване");
-    private JButton editBtn = new JButton("Редактиране");
-    private JButton searchBtn = new JButton("Търси");
-    private JComboBox<String> searchBar = new MemoryComboBox<>();
+    private final List<Long> idList = new LinkedList<>();
+    private final List<String> columnNames = new LinkedList<>();
+    private final List<Column> columns = new LinkedList<>(); //only filtered columns
+    private final List<Pair> pairs = new LinkedList<>();
+    private final JTable table = new JTable();
+    private final MouseListener tableListener = new TableListener(this);
+    private final JScrollPane scrollPlane = new JScrollPane(table);
+    private final JButton addBtn = new JButton("Добавяне");
+    private final JButton delBtn = new JButton("Изтриване");
+    private final JButton editBtn = new JButton("Редактиране");
+    private final JButton searchBtn = new JButton("Търси");
+    private final JComboBox<String> searchBar = new MemoryComboBox<>();
 
     public CRUDPanel(String tableName) {
         //Label&TextField Panel
@@ -54,26 +59,25 @@ public class CRUDPanel extends JPanel {
         buttonHolder.add(searchBar);
         buttonHolder.add(searchBtn);
         //searchBar.setMaximumSize(new Dimension(150,searchBtn.getHeight()));
-        searchBar.setMaximumSize(new Dimension(150,26));
+        searchBar.setMaximumSize(new Dimension(150, 26));
         this.add(buttonHolder);
         addBtn.addActionListener(new AddAction());
         delBtn.addActionListener(new DeleteAction());
         editBtn.addActionListener(new EditAction());
         searchBtn.addActionListener(new SearchAction());
         //---Down Panel
-
+        table.addMouseListener(tableListener);
         scrollPlane.setPreferredSize(new Dimension(450, 150));
         System.out.println(idColumn + " " + tableName);
         System.out.println(foreignIdColumns.toString() + " " + tableName);
-        //пълним table първоначално
-        table.setModel(DBTool.getInstance().getModelForColumns(columnNames, tableName));
+        updateModel();//пълним table първоначално
         this.add(scrollPlane);
         this.setVisible(true);
     }
 
+
     //might add field and data value in hashmap for a switch statement - DONE
     //TODO LOAD ENUMS FROM CONFIG FILE?? FUCKING GENIUS omfg yesss
-
 
     //Gets and filters all column names to normal fields and key fields
     private void filterColumnNamesAndDataTypes() { //малко ми изглежда тежко, така че ще е хубаво само да се изпълнява веднъж
@@ -94,21 +98,27 @@ public class CRUDPanel extends JPanel {
         }
     }
 
+    private void updateModel() {
+        table.setModel(DBTool.getInstance().getModelForColumns(columnNames, tableName));
+    }
+
+
     private class AddAction implements ActionListener {
         @Override
         public void actionPerformed(final ActionEvent e) {
-            StringBuilder columnsSb = new StringBuilder("INSERT INTO "+tableName+"(");
+            StringBuilder columnsSb = new StringBuilder("INSERT INTO " + tableName + "(");
             StringBuilder valuesSb = new StringBuilder(" VALUES (");
-            for(Pair pair : pairs){
+            for (Pair pair : pairs) {
                 columnsSb.append(pair.getColumn().getField()).append(", ");
                 valuesSb.append(pair.getFormattedTextFieldText()).append(", ");
             }
-            columnsSb.replace(columnsSb.length()-2, columnsSb.length(),")");
-            valuesSb.replace(valuesSb.length()-2, valuesSb.length(),")");
+            columnsSb.replace(columnsSb.length() - 2, columnsSb.length(), ")");
+            valuesSb.replace(valuesSb.length() - 2, valuesSb.length(), ")");
             columnsSb.append(valuesSb);
-            try{
+            try {
                 DBTool.getInstance().executeSql(columnsSb.toString());
-            }catch (SQLException sqlException){
+                updateModel();
+            } catch (SQLException sqlException) {
                 sqlException.printStackTrace();
                 //todo add error message
             }
@@ -136,4 +146,9 @@ public class CRUDPanel extends JPanel {
 
         }
     }
+
+    public List<Pair> getPairs() {
+        return pairs;
+    }
+
 }
