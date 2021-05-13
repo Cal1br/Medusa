@@ -27,6 +27,10 @@ public class Column {
         return field;
     }
 
+    public int getTypeLen() {
+        return typeLen;
+    }
+
     public DataType getType() {
         return type;
     }

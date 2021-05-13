@@ -17,6 +17,7 @@ public class ForeignKeyComboPair extends JPanel {
     private String tableName = "";
 
 
+    //todo optimize this too, get a reference sql
     public ForeignKeyComboPair(String key) {
         tableName = findTableName(foreignKey);
         names = findNames(tableName);

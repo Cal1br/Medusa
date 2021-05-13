@@ -14,8 +14,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -73,6 +75,7 @@ public class DBTool {
         return tableNames;
 
     }
+
     @Deprecated
     public List<String> getColumnNames(String tableName){
         List<String> list = new LinkedList<>();
@@ -87,22 +90,6 @@ public class DBTool {
             final ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()){
                 list.add(resultSet.getString(1));
-            }
-        } catch (SQLException sqlException) {
-            sqlException.printStackTrace();
-        }
-        return list;
-    }
-
-    public List<Column> getColumnNamesAndType(String tableName){
-        List<Column> list = new LinkedList<>();
-        String sql = "SHOW COLUMNS FROM "+tableName;
-        PreparedStatement statement = null;
-        try {
-            statement = connection.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
-            final ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()){
-                list.add(new Column(resultSet.getNString(1),resultSet.getNString(2),resultSet.getBoolean(3)));
             }
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
@@ -166,6 +153,50 @@ public class DBTool {
             exception.printStackTrace();
         }
         return model;
+    }
+
+    /**
+     * Returns primary and foreign keys. Boolean value is true if it is the primary key, and false if it is a
+     * foreign key.
+     * @param tableName
+     * @return HashMap
+     */
+    public HashMap<String,Boolean> getTableKeys(final String tableName) {
+        HashMap<String,Boolean> map = new HashMap<>();
+        connection = getConnection();
+        String sql = "select CONSTRAINT_TYPE, COLUMN_LIST from information_schema.constraints where table_name = ?";
+        try{
+            sqlStatement = connection.prepareStatement(sql);
+            sqlStatement.setString(1,tableName);
+            set = sqlStatement.executeQuery();
+            while (set.next()){
+                if(set.getString(1).equals("PRIMARY KEY")){
+                    map.put(set.getString(2),true);
+                }
+                else {
+                    map.put(set.getString(2),false);
+                }
+            }
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+        return map;
+    }
+    public List<Column> getColumnNamesAndType(String tableName){
+        List<Column> list = new LinkedList<>();
+        String sql = "SHOW COLUMNS FROM "+tableName;
+        PreparedStatement statement = null;
+        try {
+            statement = connection.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
+            final ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()){
+                list.add(new Column(resultSet.getNString(1),resultSet.getNString(2),resultSet.getBoolean(3)));
+            }
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+        return list;
     }
 
     /*public MyModel getAllData(String tableName) {
