@@ -1,19 +1,20 @@
 package tabs;
 
+import buttons.AddButton;
+import buttons.DelButton;
+import buttons.EditButton;
+import buttons.SearchButton;
 import listeners.SearchButtonListener;
+import listeners.TableListener;
 import models.Column;
 import models.Pair;
 import utils.DBTool;
 import utils.ForeignKeyComboPair;
 import utils.MemoryComboBox;
-import listeners.TableListener;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,19 +30,20 @@ public class CRUDPanel extends JPanel {
     private final List<Pair> pairs = new LinkedList<>();
     private final JTable table = new JTable();
     private final MouseListener tableListener = new TableListener(this);
-    private MouseListener searchButtonListener = null;
     private final JScrollPane scrollPlane = new JScrollPane(table);
-    private final JButton addBtn = new JButton("Добавяне");
-    private final JButton delBtn = new JButton("Изтриване");
-    private final JButton editBtn = new JButton("Редактиране");
-    private final JButton searchBtn = new JButton("Търси");
     private final JComboBox<String> searchBar = new MemoryComboBox<>();
     private final JTextField searchText = new JTextField();
-    private String tableName = "";
-    private String idColumn = "";
     private final JPanel searchPanel = new JPanel();
     //todo this is for a quick test
-    JPanel buttonHolder = null;
+    private JPanel buttonHolder = null;
+    private JButton editBtn = null;
+    private JButton searchBtn = new JButton("Търси");
+    private MouseListener searchButtonListener = null;
+    private JButton addBtn = null;
+    private JButton delBtn = null;
+    private String tableName = "";
+    private String idColumn = "";
+
     public CRUDPanel(String tableName) {
         //Label&TextField Panel
         this.tableName = tableName;
@@ -61,24 +63,23 @@ public class CRUDPanel extends JPanel {
         //---Button panel
         buttonHolder = new JPanel();
         buttonHolder.setLayout(new BoxLayout(buttonHolder, BoxLayout.X_AXIS));
+        addBtn = new AddButton("Добавяне", this);
+        delBtn = new DelButton("Изтриване", this);
+        editBtn = new EditButton("Редактиране", this);
+        searchBtn = new SearchButton("Търсене", this);
         buttonHolder.add(addBtn);
         buttonHolder.add(delBtn);        /*You should (always) be using setValue for JFormattedTextField and you should true setValue(null) to clear the field*/
         buttonHolder.add(editBtn);
-        buttonHolder.add(searchBar);
-        searchBar.setVisible(false);
         buttonHolder.add(searchBtn);
         searchBar.setMaximumSize(new Dimension(150, 26));
         this.add(buttonHolder);
-        addBtn.addActionListener(new AddAction());
-        delBtn.addActionListener(new DeleteAction());
-        editBtn.addActionListener(new EditAction());
-        searchBtn.addActionListener(new SearchAction());
+
         //---Search Panel
-        searchPanel.setLayout(new BoxLayout(searchPanel,BoxLayout.X_AXIS));
+        searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.X_AXIS));
         searchPanel.add(searchBar);
-        searchBar.setMaximumSize(new Dimension(150,30));
+        searchBar.setMaximumSize(new Dimension(150, 30));
         searchPanel.add(searchText);
-        searchText.setMaximumSize(new Dimension(350,30));
+        searchText.setMaximumSize(new Dimension(350, 30));
         this.add(searchPanel);
         searchBar.setVisible(true);
         searchText.setVisible(true);
@@ -95,10 +96,29 @@ public class CRUDPanel extends JPanel {
         this.setVisible(true);
     }
 
+    public String getTableName() {
+        return tableName;
+    }
+
+    public List<Column> getColumns() {
+        return columns;
+    }
+
 
     //might add field and data value in hashmap for a switch statement - DONE
     //TODO LOAD ENUMS FROM CONFIG FILE?? FUCKING GENIUS omfg yesss
 
+    public JComboBox<String> getSearchBar() {
+        return searchBar;
+    }
+
+    public JTextField getSearchText() {
+        return searchText;
+    }
+
+    public JTable getTable() {
+        return table;
+    }
 
     //Gets and filters all column names to normal fields and key fields
     private void filterColumnNamesAndDataTypes() { //малко ми изглежда тежко, така че ще е хубаво само да се изпълнява веднъж
@@ -119,7 +139,7 @@ public class CRUDPanel extends JPanel {
         }
     }
 
-    private void updateModel() {
+    public void updateModel() {
         table.setModel(DBTool.getInstance().getModelForColumns(columnNames, tableName));
     }
 
@@ -127,57 +147,6 @@ public class CRUDPanel extends JPanel {
         return pairs;
     }
     //TODO ADD TOOLTIPS FOR BUTTONS!
-    private class AddAction implements ActionListener {
-        @Override
-        public void actionPerformed(final ActionEvent e) {
-            StringBuilder columnsSb = new StringBuilder("INSERT INTO " + tableName + "(");
-            StringBuilder valuesSb = new StringBuilder(" VALUES (");
-            for (Pair pair : pairs) {
-                columnsSb.append(pair.getColumn().getField()).append(", ");
-                valuesSb.append(pair.getFormattedTextFieldText()).append(", ");
-            }
-            columnsSb.replace(columnsSb.length() - 2, columnsSb.length(), ")");
-            valuesSb.replace(valuesSb.length() - 2, valuesSb.length(), ")");
-            columnsSb.append(valuesSb);
-            try {
-                DBTool.getInstance().executeSql(columnsSb.toString());
-                updateModel();
-            } catch (SQLException sqlException) {
-                sqlException.printStackTrace();
-                //todo add error message
-            }
 
-        }
-    }
-
-    private class DeleteAction implements ActionListener {
-        @Override
-        public void actionPerformed(final ActionEvent e) {
-         //   buttonHolder.
-        }
-    }
-
-    private class EditAction implements ActionListener {
-        @Override
-        public void actionPerformed(final ActionEvent e) {
-        }
-    }
-
-    private class SearchAction implements ActionListener {
-        @Override
-        public void actionPerformed(final ActionEvent e) {
-            if(!searchPanel.isVisible()){
-                searchPanel.setVisible(true);
-                for(Column column : columns){
-                    searchBar.addItem(column.getField());
-                }
-            }
-            else {
-                final String text = searchText.getText();
-                final String selectedColumn = searchBar.getSelectedItem().toString();
-                table.setModel(DBTool.getInstance().getModelWhere(tableName,selectedColumn,text));
-            }
-        }
-    }
 
 }
