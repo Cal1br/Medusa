@@ -17,9 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 public class DBTool {
     //init метод който зарежда configa в strings
@@ -33,13 +31,6 @@ public class DBTool {
     private String DBUsername = "";
     private String DBPassword = "";
 
-
-    public static DBTool getInstance() {
-        if (reference == null) {
-            reference = new DBTool();
-        }
-        return reference;
-    }
 
     private DBTool() {
         Properties properties = new Properties();
@@ -59,6 +50,13 @@ public class DBTool {
         }
     }
 
+    public static DBTool getInstance() {
+        if (reference == null) {
+            reference = new DBTool();
+        }
+        return reference;
+    }
+
     public List<String> getTableNames() {
         connection = getConnection();
         String sql = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='TABLE'";
@@ -66,7 +64,7 @@ public class DBTool {
         try {
             Statement statement = connection.createStatement();
             set = statement.executeQuery(sql);
-            while (set.next()){
+            while (set.next()) {
                 tableNames.add(set.getString(1));
             }
         } catch (SQLException sqlException) {
@@ -77,7 +75,7 @@ public class DBTool {
     }
 
     @Deprecated
-    public List<String> getColumnNames(String tableName){
+    public List<String> getColumnNames(String tableName) {
         List<String> list = new LinkedList<>();
         String sql = "SELECT COLUMN_NAME " +
                 "FROM INFORMATION_SCHEMA.COLUMNS " +
@@ -88,7 +86,7 @@ public class DBTool {
             statement = connection.prepareStatement(sql);
             statement.setString(1, tableName); //todo this kinda sus
             final ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()){
+            while (resultSet.next()) {
                 list.add(resultSet.getString(1));
             }
         } catch (SQLException sqlException) {
@@ -101,7 +99,7 @@ public class DBTool {
         try {
             Class.forName(driverPath);
             connection = java.sql.DriverManager.getConnection
-                     (DBPath, DBUsername, DBPassword);
+                    (DBPath, DBUsername, DBPassword);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (java.sql.SQLException e) {
@@ -139,59 +137,43 @@ public class DBTool {
         }
     }
 
-    public TableModel getModelForColumns(final List<String> columnNames, String tableName) {
-        MyModel model = null;
-        //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
-        String sql ="SELECT * FROM "+tableName;
-        try {
-            connection = getConnection();
-            sqlStatement = connection.prepareStatement(sql);
-            set = sqlStatement.executeQuery();
-            model = new MyModel(set);
-
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-        return model;
-    }
-
     /**
      * Returns primary and foreign keys. Boolean value is true if it is the primary key, and false if it is a
      * foreign key.
+     *
      * @param tableName
      * @return HashMap
      */
-    public HashMap<String,Boolean> getTableKeys(final String tableName) {
-        HashMap<String,Boolean> map = new HashMap<>();
+    public HashMap<String, Boolean> getTableKeys(final String tableName) {
+        HashMap<String, Boolean> map = new HashMap<>();
         connection = getConnection();
         String sql = "select CONSTRAINT_TYPE, COLUMN_LIST from information_schema.constraints where table_name = ?";
-        try{
+        try {
             sqlStatement = connection.prepareStatement(sql);
-            sqlStatement.setString(1,tableName);
+            sqlStatement.setString(1, tableName);
             set = sqlStatement.executeQuery();
-            while (set.next()){
-                if(set.getString(1).equals("PRIMARY KEY")){
-                    map.put(set.getString(2),true);
-                }
-                else {
-                    map.put(set.getString(2),false);
+            while (set.next()) {
+                if (set.getString(1).equals("PRIMARY KEY")) {
+                    map.put(set.getString(2), true);
+                } else {
+                    map.put(set.getString(2), false);
                 }
             }
-        }
-        catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return map;
     }
-    public List<Column> getColumnNamesAndType(String tableName){
+
+    public List<Column> getColumnNamesAndType(String tableName) {
         List<Column> list = new LinkedList<>();
-        String sql = "SHOW COLUMNS FROM "+tableName;
+        String sql = "SHOW COLUMNS FROM " + tableName;
         PreparedStatement statement = null;
         try {
-            statement = connection.prepareStatement(sql,ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
+            statement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             final ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()){
-                list.add(new Column(resultSet.getNString(1),resultSet.getNString(2),resultSet.getBoolean(3)));
+            while (resultSet.next()) {
+                list.add(new Column(resultSet.getNString(1), resultSet.getNString(2), resultSet.getBoolean(3)));
             }
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
@@ -206,6 +188,37 @@ public class DBTool {
         statement.execute();
     }
 
+    public TableModel getModelWhere(final String tableName, final String selectedColumn, final String text) {
+        MyModel model = null;
+        //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
+        String sql = "SELECT * FROM " + tableName+" WHERE "+selectedColumn+" iLIKE '"+ text+"%'"; //iLike = ignoreCaseLike
+        try {
+            connection = getConnection();
+            sqlStatement = connection.prepareStatement(sql);
+            set = sqlStatement.executeQuery();
+            model = new MyModel(set);
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return model;
+    }
+
+    public TableModel getModelForColumns(final List<String> columnNames, String tableName) {
+        MyModel model = null;
+        //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
+        String sql = "SELECT * FROM " + tableName;
+        try {
+            connection = getConnection();
+            sqlStatement = connection.prepareStatement(sql);
+            set = sqlStatement.executeQuery();
+            model = new MyModel(set);
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return model;
+    }
     /*public MyModel getAllData(String tableName) {
         connection = getConnection();
         MyModel model = null;
