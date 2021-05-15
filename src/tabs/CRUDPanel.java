@@ -77,6 +77,7 @@ public class CRUDPanel extends JPanel {
         //---Search Panel
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.X_AXIS));
         searchPanel.add(searchBar);
+
         searchBar.setMaximumSize(new Dimension(150, 30));
         searchPanel.add(searchText);
         searchText.setMaximumSize(new Dimension(350, 30));
@@ -104,8 +105,10 @@ public class CRUDPanel extends JPanel {
         return columns;
     }
 
-
-    //might add field and data value in hashmap for a switch statement - DONE
+    public JPanel getSearchPanel() {
+        return searchPanel;
+    }
+//might add field and data value in hashmap for a switch statement - DONE
     //TODO LOAD ENUMS FROM CONFIG FILE?? FUCKING GENIUS omfg yesss
 
     public JComboBox<String> getSearchBar() {
