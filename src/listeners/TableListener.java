@@ -9,7 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.HashMap;
 import java.util.List;
-
+//най-доброто място където да storevam кои ключове съм взимал е таблицата
 public class TableListener implements MouseListener {
     private CRUDPanel originTable = null;
     private int selected = -1;
@@ -20,7 +20,12 @@ public class TableListener implements MouseListener {
         this.originTable = table;
     }
 
+    public int getSelectedId() { //todo да връща селектираното ID
+        return selectedId;
+    }
+
     @Override
+    //ТОВА ПЪЛНИ ТАБЛИЦАТА КАТО СЕ НАТИСНЕ 2 ПЪТИ БЪРЗО
     public void mouseClicked(final MouseEvent e) {
         Component component = e.getComponent();
         JTable jTable = (JTable) component;

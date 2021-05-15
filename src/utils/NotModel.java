@@ -6,7 +6,7 @@ import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 
 
-public class MyModel extends AbstractTableModel {
+public class NotModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
 	private ResultSet result;	
@@ -14,7 +14,7 @@ public class MyModel extends AbstractTableModel {
 	private int columnCount;
 	private ArrayList<Object> data=new ArrayList<Object>();
 	 
-	 public MyModel(ResultSet rs) throws Exception
+	 public NotModel(ResultSet rs) throws Exception
 	 {
 		 setRS(rs);
 	 }

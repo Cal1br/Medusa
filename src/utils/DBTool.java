@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class DBTool {
     //init метод който зарежда configa в strings
@@ -189,14 +190,14 @@ public class DBTool {
     }
 
     public TableModel getModelWhere(final String tableName, final String selectedColumn, final String text) {
-        MyModel model = null;
+        NotModel model = null;
         //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
         String sql = "SELECT * FROM " + tableName+" WHERE "+selectedColumn+" iLIKE '"+ text+"%'"; //iLike = ignoreCaseLike
         try {
             connection = getConnection();
             sqlStatement = connection.prepareStatement(sql);
             set = sqlStatement.executeQuery();
-            model = new MyModel(set);
+            model = new NotModel(set);
 
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -204,15 +205,15 @@ public class DBTool {
         return model;
     }
 
-    public TableModel getModelForColumns(final List<String> columnNames, String tableName) {
-        MyModel model = null;
-        //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
-        String sql = "SELECT * FROM " + tableName;
+    public TableModel getModelForColumns(final List<Column> columnNames, String tableName) {
+        NotModel model = null;
+        String sql = String.format("SELECT %s FROM "+tableName,columnNames.stream().map(column -> column.getField()).collect(Collectors.joining(","))); //YARE YARE DAZE
+        //String sql = "SELECT * FROM " + tableName;
         try {
             connection = getConnection();
             sqlStatement = connection.prepareStatement(sql);
             set = sqlStatement.executeQuery();
-            model = new MyModel(set);
+            model = new NotModel(set);
 
         } catch (Exception exception) {
             exception.printStackTrace();

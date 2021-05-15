@@ -16,6 +16,7 @@ public class TabFrame extends JFrame {
         this.setIconImage(icon.getImage());
         this.dbTool = dbTool;
         this.setSize(750, 600);
+        this.setResizable(false);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         FillPanels(dbTool.getTableNames());
         this.add(tabbedPane);

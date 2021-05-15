@@ -22,10 +22,9 @@ import java.util.List;
 //todo update combo box on tab click
 //todo UUID
 public class CRUDPanel extends JPanel {
-    private final List<String> foreignIdColumns = new LinkedList<>();
+    private final List<Column> foreignIdColumns = new LinkedList<>();
     //TODO трябва да намеря начин да заредя idtata тука от таблицата
     private final List<Long> idList = new LinkedList<>();
-    private final List<String> columnNames = new LinkedList<>();
     private final List<Column> columns = new LinkedList<>(); //only filtered columns
     private final List<Pair> pairs = new LinkedList<>();
     private final JTable table = new JTable();
@@ -55,8 +54,8 @@ public class CRUDPanel extends JPanel {
             pairs.add(pair);
             this.add(pair);
         }
-        for (String name : foreignIdColumns) {
-            this.add(new ForeignKeyComboPair(name));
+        for (Column column : foreignIdColumns) {
+            this.add(new ForeignKeyComboPair(column.getField()));
         }
 
 
@@ -71,9 +70,7 @@ public class CRUDPanel extends JPanel {
         buttonHolder.add(delBtn);        /*You should (always) be using setValue for JFormattedTextField and you should true setValue(null) to clear the field*/
         buttonHolder.add(editBtn);
         buttonHolder.add(searchBtn);
-        searchBar.setMaximumSize(new Dimension(150, 26));
         this.add(buttonHolder);
-
         //---Search Panel
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.X_AXIS));
         searchPanel.add(searchBar);
@@ -95,6 +92,10 @@ public class CRUDPanel extends JPanel {
         updateModel();//пълним table първоначално
         this.add(scrollPlane);
         this.setVisible(true);
+    }
+
+    public MouseListener getTableListener() {
+        return tableListener;
     }
 
     public String getTableName() {
@@ -119,11 +120,9 @@ public class CRUDPanel extends JPanel {
         return searchText;
     }
 
-    public JTable getTable() {
-        return table;
-    }
-
-    //Gets and filters all column names to normal fields and key fields
+    /**
+     * Gets and filters all column names to normal fields and key fields
+     */
     private void filterColumnNamesAndDataTypes() { //малко ми изглежда тежко, така че ще е хубаво само да се изпълнява веднъж
 
         final HashMap<String, Boolean> keys = DBTool.getInstance().getTableKeys(tableName);
@@ -134,7 +133,7 @@ public class CRUDPanel extends JPanel {
                 if (keys.get(columnName)) {
                     idColumn = columnName;
                 } else {
-                    foreignIdColumns.add(columnName);
+                    foreignIdColumns.add(nextColumn);
                 }
             } else {
                 columns.add(nextColumn);
@@ -142,8 +141,12 @@ public class CRUDPanel extends JPanel {
         }
     }
 
+    public JTable getTable() {
+        return table;
+    }
+
     public void updateModel() {
-        table.setModel(DBTool.getInstance().getModelForColumns(columnNames, tableName));
+        table.setModel(DBTool.getInstance().getModelForColumns(columns, tableName));
     }
 
     public List<Pair> getPairs() {

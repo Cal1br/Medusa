@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 
 public class DelButton extends JButton {
     private CRUDPanel origin = null;
+    private int selected = -1;
 
     public DelButton(final String str, final CRUDPanel crudPanel) {
         super(str);
@@ -19,6 +20,7 @@ public class DelButton extends JButton {
     private class DeleteAction implements ActionListener {
         @Override
         public void actionPerformed(final ActionEvent e) {
+            //selected = origin.getTableListener().getSelected();
             //  final ActionListener[] actionListeners = this.getActionListeners();
             //        delBtn.removeActionListener();
         }
