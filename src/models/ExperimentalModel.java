@@ -37,6 +37,10 @@ public class ExperimentalModel extends AbstractTableModel {
         }
     }
 
+    public List<Long> getIdList() {
+        return idList;
+    }
+
     @Override
     public int getRowCount() {
         return rowCount;
@@ -44,7 +48,7 @@ public class ExperimentalModel extends AbstractTableModel {
 
     @Override
     public int getColumnCount() {
-        return columnCount-1;
+        return columnCount - 1;
     }
 
     @Override
@@ -55,7 +59,7 @@ public class ExperimentalModel extends AbstractTableModel {
     @Override
     public String getColumnName(final int column) {
         try {
-            return metaData.getColumnName(column+2);
+            return metaData.getColumnName(column + 2);
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
             return "SQL ERROR";

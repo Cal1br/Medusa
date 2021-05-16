@@ -1,7 +1,6 @@
 package utils;
 
 import models.Column;
-import models.CustomModel;
 import models.ExperimentalModel;
 import tabs.CRUDPanel;
 
@@ -196,7 +195,7 @@ public class DBTool {
     public TableModel getModelWhere(final String tableName, final String selectedColumn, final String text) {
         NotModel model = null;
         //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
-        String sql = "SELECT * FROM " + tableName+" WHERE "+selectedColumn+" iLIKE '"+ text+"%'"; //iLike = ignoreCaseLike
+        String sql = "SELECT * FROM " + tableName + " WHERE " + selectedColumn + " iLIKE '" + text + "%'"; //iLike = ignoreCaseLike
         try {
             connection = getConnection();
             sqlStatement = connection.prepareStatement(sql);
@@ -209,53 +208,35 @@ public class DBTool {
         return model;
     }
 
-    public TableModel getModelForColumns(final List<Column> columnNames, String tableName) {
-        NotModel model = null;
-        String sql = String.format("SELECT %s FROM "+tableName,columnNames.stream().map(Column::getField).collect(Collectors.joining(","))); //YARE YARE DAZE
-        //String sql = "SELECT * FROM " + tableName;
-        try {
-            connection = getConnection();
-            sqlStatement = connection.prepareStatement(sql);
-            set = sqlStatement.executeQuery();
-            model = new NotModel(set);
-
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-        return model;
-    }
     public TableModel getModelForColumns(final CRUDPanel origin) {
         AbstractTableModel model = null;
-        boolean idListPresent = true;
         String tableName = origin.getTableName();
         final List<Column> columns = origin.getColumns();
-        String sql = String.format("SELECT "+origin.getIdColumn()+"%s FROM "+tableName,columns.stream().map(Column::getField).collect(Collectors.joining(","))); //YARE YARE DAZE
-        if(!origin.getIdColumn().equals("")){
-            try {
-                connection = getConnection();
-                sqlStatement = connection.prepareStatement(sql);
-                set = sqlStatement.executeQuery();
-                model = new ExperimentalModel(set);
+        String sql = String.format("SELECT " + origin.getIdColumn() + ",%s FROM " + tableName, columns.stream().map(Column::getField).collect(Collectors.joining(","))); //YARE YARE DAZE
+        try {
+            connection = getConnection();
+            sqlStatement = connection.prepareStatement(sql);
+            set = sqlStatement.executeQuery();
+            ExperimentalModel experimentalModel = new ExperimentalModel(set);
+            origin.setIdList(experimentalModel.getIdList());
+            model = experimentalModel;
 
-            } catch (Exception exception) {
-                exception.printStackTrace();
-            }
-            return model;
+        } catch (Exception exception) {
+            exception.printStackTrace();
         }
-        else {//знам че по принцип това не е нужно защото базата данни ще бъде в 3та нормална форма, но все пак вместо да crashva просто мога да го направя да работи.
-            try {
-                connection = getConnection();
-                sqlStatement = connection.prepareStatement(sql);
-                set = sqlStatement.executeQuery();
-                model = new NotModel(set);
-
-            } catch (Exception exception) {
-                exception.printStackTrace();
-            }
-            return model;
-
-        }
+        return model;
         //String sql = "SELECT * FROM " + tableName;
+    }
+
+    public void deleteAt(final long selectedId, final String tableName, final String idColumnName) {
+        String sql = "DELETE FROM " + tableName + " WHERE " + idColumnName + "=" + selectedId;
+        try {
+            connection = getConnection();
+            sqlStatement = connection.prepareStatement(sql);
+            sqlStatement.execute();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
     }
     /*public MyModel getAllData(String tableName) {
         connection = getConnection();

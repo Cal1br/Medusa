@@ -23,8 +23,6 @@ import java.util.List;
 //todo UUID
 public class CRUDPanel extends JPanel {
     private final List<Column> foreignIdColumns = new LinkedList<>();
-    //TODO трябва да намеря начин да заредя idtata тука от таблицата
-    private final List<Long> idList = new LinkedList<>();
     private final List<Column> columns = new LinkedList<>(); //only filtered columns
     private final List<Pair> pairs = new LinkedList<>();
     private final JTable table = new JTable();
@@ -33,6 +31,8 @@ public class CRUDPanel extends JPanel {
     private final JComboBox<String> searchBar = new MemoryComboBox<>();
     private final JTextField searchText = new JTextField();
     private final JPanel searchPanel = new JPanel();
+    //TODO трябва да намеря начин да заредя idtata тука от таблицата
+    private List<Long> idList = null;
     //todo this is for a quick test
     private JPanel buttonHolder = null;
     private JButton editBtn = null;
@@ -94,6 +94,15 @@ public class CRUDPanel extends JPanel {
         this.setVisible(true);
     }
 
+    public List<Long> getIdList() {
+        return idList;
+    }
+
+    public void setIdList(List<Long> list) {
+        this.idList = list;
+        System.out.println(idList.toString() + " " + tableName);
+    }
+
     public MouseListener getTableListener() {
         return tableListener;
     }
@@ -119,13 +128,7 @@ public class CRUDPanel extends JPanel {
     }
 
     public String getIdColumn() {
-        //за да няма конфликт при липса на id колона
-        if(idColumn!=null){
-            return idColumn+",";
-        }
-        else {
-            return "";
-        }
+        return idColumn;
     }
 
     /**

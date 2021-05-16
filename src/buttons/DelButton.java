@@ -1,14 +1,18 @@
 package buttons;
 
+import listeners.TableListener;
 import tabs.CRUDPanel;
+import utils.DBTool;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 public class DelButton extends JButton {
     private CRUDPanel origin = null;
     private int selected = -1;
+    private long selectedId = -1;
 
     public DelButton(final String str, final CRUDPanel crudPanel) {
         super(str);
@@ -20,7 +24,12 @@ public class DelButton extends JButton {
     private class DeleteAction implements ActionListener {
         @Override
         public void actionPerformed(final ActionEvent e) {
-            //selected = origin.getTableListener().getSelected();
+            TableListener listener = (TableListener) origin.getTableListener();
+            selected = listener.getSelected();
+            final List<Long> idList = origin.getIdList();
+            selectedId = idList.get(selected);
+            DBTool.getInstance().deleteAt(selectedId,origin.getTableName(),origin.getIdColumn());
+            origin.updateModel();
             //  final ActionListener[] actionListeners = this.getActionListeners();
             //        delBtn.removeActionListener();
         }
