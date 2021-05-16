@@ -41,7 +41,7 @@ public class CRUDPanel extends JPanel {
     private JButton addBtn = null;
     private JButton delBtn = null;
     private String tableName = "";
-    private String idColumn = "";
+    private String idColumn;
 
     public CRUDPanel(String tableName) {
         //Label&TextField Panel
@@ -109,8 +109,6 @@ public class CRUDPanel extends JPanel {
     public JPanel getSearchPanel() {
         return searchPanel;
     }
-//might add field and data value in hashmap for a switch statement - DONE
-    //TODO LOAD ENUMS FROM CONFIG FILE?? FUCKING GENIUS omfg yesss
 
     public JComboBox<String> getSearchBar() {
         return searchBar;
@@ -118,6 +116,16 @@ public class CRUDPanel extends JPanel {
 
     public JTextField getSearchText() {
         return searchText;
+    }
+
+    public String getIdColumn() {
+        //за да няма конфликт при липса на id колона
+        if(idColumn!=null){
+            return idColumn+",";
+        }
+        else {
+            return "";
+        }
     }
 
     /**
@@ -146,13 +154,18 @@ public class CRUDPanel extends JPanel {
     }
 
     public void updateModel() {
-        table.setModel(DBTool.getInstance().getModelForColumns(columns, tableName));
+/*        List<Column> columnList = new LinkedList<>(columns);
+        columnList.addAll(foreignIdColumns);*/
+        //таблицата не показва външните ключове, те ще се правят с join заявка
+        table.setModel(DBTool.getInstance().getModelForColumns(this));
     }
 
     public List<Pair> getPairs() {
         return pairs;
     }
     //TODO ADD TOOLTIPS FOR BUTTONS!
-
+    //TODO combo box-a който е с foreign key-ovete трябва да се направи така че да чете от config кой файл да избира...
+    //TODO aко няма config, да се създава
+    //TODO LOAD ENUMS FROM CONFIG FILE?? FUCKING GENIUS omfg yesss
 
 }

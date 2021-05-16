@@ -1,6 +1,8 @@
 package utils;
 
 import models.Column;
+import models.CustomModel;
+import tabs.CRUDPanel;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
@@ -207,13 +209,30 @@ public class DBTool {
 
     public TableModel getModelForColumns(final List<Column> columnNames, String tableName) {
         NotModel model = null;
-        String sql = String.format("SELECT %s FROM "+tableName,columnNames.stream().map(column -> column.getField()).collect(Collectors.joining(","))); //YARE YARE DAZE
+        String sql = String.format("SELECT %s FROM "+tableName,columnNames.stream().map(Column::getField).collect(Collectors.joining(","))); //YARE YARE DAZE
         //String sql = "SELECT * FROM " + tableName;
         try {
             connection = getConnection();
             sqlStatement = connection.prepareStatement(sql);
             set = sqlStatement.executeQuery();
             model = new NotModel(set);
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return model;
+    }
+    public TableModel getModelForColumns(final CRUDPanel origin) {
+        CustomModel model = null;
+        String tableName = origin.getTableName();
+        final List<Column> columns = origin.getColumns();
+        String sql = String.format("SELECT "+origin.getIdColumn()+"%s FROM "+tableName,columns.stream().map(Column::getField).collect(Collectors.joining(","))); //YARE YARE DAZE
+        //String sql = "SELECT * FROM " + tableName;
+        try {
+            connection = getConnection();
+            sqlStatement = connection.prepareStatement(sql);
+            set = sqlStatement.executeQuery();
+            model = new CustomModel(set);
 
         } catch (Exception exception) {
             exception.printStackTrace();
