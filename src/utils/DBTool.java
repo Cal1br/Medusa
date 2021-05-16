@@ -2,9 +2,11 @@ package utils;
 
 import models.Column;
 import models.CustomModel;
+import models.ExperimentalModel;
 import tabs.CRUDPanel;
 
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -223,21 +225,37 @@ public class DBTool {
         return model;
     }
     public TableModel getModelForColumns(final CRUDPanel origin) {
-        CustomModel model = null;
+        AbstractTableModel model = null;
+        boolean idListPresent = true;
         String tableName = origin.getTableName();
         final List<Column> columns = origin.getColumns();
         String sql = String.format("SELECT "+origin.getIdColumn()+"%s FROM "+tableName,columns.stream().map(Column::getField).collect(Collectors.joining(","))); //YARE YARE DAZE
-        //String sql = "SELECT * FROM " + tableName;
-        try {
-            connection = getConnection();
-            sqlStatement = connection.prepareStatement(sql);
-            set = sqlStatement.executeQuery();
-            model = new CustomModel(set);
+        if(!origin.getIdColumn().equals("")){
+            try {
+                connection = getConnection();
+                sqlStatement = connection.prepareStatement(sql);
+                set = sqlStatement.executeQuery();
+                model = new ExperimentalModel(set);
 
-        } catch (Exception exception) {
-            exception.printStackTrace();
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+            return model;
         }
-        return model;
+        else {//знам че по принцип това не е нужно защото базата данни ще бъде в 3та нормална форма, но все пак вместо да crashva просто мога да го направя да работи.
+            try {
+                connection = getConnection();
+                sqlStatement = connection.prepareStatement(sql);
+                set = sqlStatement.executeQuery();
+                model = new NotModel(set);
+
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+            return model;
+
+        }
+        //String sql = "SELECT * FROM " + tableName;
     }
     /*public MyModel getAllData(String tableName) {
         connection = getConnection();
