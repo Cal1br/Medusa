@@ -7,6 +7,8 @@ import buttons.SearchButton;
 import listeners.SearchButtonListener;
 import listeners.TableListener;
 import models.Column;
+import models.Key;
+import models.KeyColumn;
 import models.Pair;
 import utils.DBTool;
 import utils.ForeignKeyComboPair;
@@ -22,10 +24,11 @@ import java.util.List;
 //todo update combo box on tab click
 //todo UUID
 public class CRUDPanel extends JPanel {
-    private final List<Column> foreignIdColumns = new LinkedList<>();
+    private final List<KeyColumn> foreignKeyColumns = new LinkedList<>();
     private final List<Column> columns = new LinkedList<>(); //only filtered columns
     private final List<Pair> pairs = new LinkedList<>();
     private final List<ForeignKeyComboPair> foreignPairs = new LinkedList<>(); // TODO major refactor така че FOREIGNKEYCOMBOPAIR да extendva ot pair
+    private List<Key> keysList = null;
     private final JTable table = new JTable();
     private final MouseListener tableListener = new TableListener(this);
     private final JScrollPane scrollPlane = new JScrollPane(table);
@@ -55,8 +58,8 @@ public class CRUDPanel extends JPanel {
             pairs.add(pair);
             this.add(pair);
         }
-        for (Column column : foreignIdColumns) {
-            final ForeignKeyComboPair keyComboPair = new ForeignKeyComboPair(this, column.getField());
+        for (KeyColumn column : foreignKeyColumns) {
+            final ForeignKeyComboPair keyComboPair = new ForeignKeyComboPair(this, column.getKey());
             this.add(keyComboPair);
             foreignPairs.add(keyComboPair);
         }
@@ -91,15 +94,12 @@ public class CRUDPanel extends JPanel {
         searchBtn.addMouseListener(searchButtonListener);
         scrollPlane.setPreferredSize(new Dimension(450, 150));
         System.out.println(idColumn + " " + tableName);
-        System.out.println(foreignIdColumns.toString() + " " + tableName);
+        System.out.println(foreignKeyColumns.toString() + " " + tableName);
         updateModel();//пълним table първоначално
         this.add(scrollPlane);
         this.setVisible(true);
     }
 
-    public List<Column> getForeignIdColumns() {
-        return foreignIdColumns;
-    }
 
     public List<ForeignKeyComboPair> getForeignPairs() {
         return foreignPairs;
@@ -145,17 +145,24 @@ public class CRUDPanel extends JPanel {
     /**
      * Gets and filters all column names to normal fields and key fields
      */
-    private void filterColumnNamesAndDataTypes() { //малко ми изглежда тежко, така че ще е хубаво само да се изпълнява веднъж
+    private void filterColumnNamesAndDataTypes() {
 
-        final HashMap<String, Boolean> keys = DBTool.getInstance().getTableKeys(tableName);
+        //final HashMap<String, Boolean> keys = DBTool.getInstance().getTableKeys(tableName);
+        keysList = DBTool.getInstance().getTableKeys(tableName);
+        HashMap<String,Key> map = new HashMap<>(); //hashmap is always the answer
+        for(Key key : keysList){
+            map.put(key.getColumnName(),key);
+        }
         final List<Column> columnList = DBTool.getInstance().getColumnNamesAndType(tableName);
         for (final Column nextColumn : columnList) {
             final String columnName = nextColumn.getField();
-            if (keys.containsKey(columnName)) {
-                if (keys.get(columnName)) {
+            if (map.containsKey(columnName)) {
+                keysList.add(map.get(columnName));
+                if (map.get(columnName).isPrimaryKey()) {
                     idColumn = columnName;
                 } else {
-                    foreignIdColumns.add(nextColumn);
+                    KeyColumn keyColumn = new KeyColumn(nextColumn,map.get(columnName));
+                    foreignKeyColumns.add(keyColumn);
                 }
             } else {
                 columns.add(nextColumn);

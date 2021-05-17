@@ -2,6 +2,7 @@ package utils;
 
 import models.Column;
 import models.ExperimentalModel;
+import models.Key;
 import models.Pair;
 import tabs.CRUDPanel;
 
@@ -18,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -149,25 +151,33 @@ public class DBTool {
      * @param tableName
      * @return HashMap
      */
-    public HashMap<String, Boolean> getTableKeys(final String tableName) {
-        HashMap<String, Boolean> map = new HashMap<>();
+    public List<Key> getTableKeys(final String tableName) {
+        List<Key> list = new LinkedList<>();
         connection = getConnection();
-        String sql = "select CONSTRAINT_TYPE, COLUMN_LIST from information_schema.constraints where table_name = ?";
+        String sql = "select CONSTRAINT_TYPE, COLUMN_LIST,SQL from information_schema.constraints where table_name = ?";
         try {
             sqlStatement = connection.prepareStatement(sql);
             sqlStatement.setString(1, tableName);
             set = sqlStatement.executeQuery();
             while (set.next()) {
                 if (set.getString(1).equals("PRIMARY KEY")) {
-                    map.put(set.getString(2), true);
+                    list.add(new Key(tableName,set.getString(2),true));
                 } else if(set.getString(1).equals("REFERENTIAL")){
-                    map.put(set.getString(2), false);
+                    //a little hacky... I know
+                    final String string = set.getString(3);
+                    final int start = string.indexOf("REFERENCES");
+
+                    final String substring = string.substring(start);
+                    StringBuilder sb = new StringBuilder(substring);
+                    sb.delete(0,20);
+                    final String[] split = sb.toString().split("[()]");
+                    list.add(new Key(tableName,set.getString(2),split[0],split[1]));
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return map;
+        return list;
     }
 
     public List<Column> getColumnNamesAndType(String tableName) {
@@ -284,19 +294,4 @@ public class DBTool {
             sqlException.printStackTrace();
         }
     }
-    /*public MyModel getAllData(String tableName) {
-        connection = getConnection();
-        MyModel model = null;
-        try {
-            //Заявките които връщат нещо (set) се изпълняват с executeQuery.
-            sqlStatement = connection.prepareStatement("SELECT * FROM " + tableName);
-            set = sqlStatement.executeQuery();
-            model = new MyModel(set);
-        } catch (java.sql.SQLException sqlException) {
-            sqlException.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return model;
-    }*/
 }

@@ -8,19 +8,26 @@ public class Column {
     private int typeLen;
     private boolean nullAllowed;
 
-    @Override
-    public String toString() {
-        return field +' '+type +' '+typeLen+ "| NULL ALLOWED = "+nullAllowed+'\n';
-    }
-
     public Column(String field, String type, boolean nullAllowed) {
         this.field = field;
-        String temp = type;
         this.nullAllowed = nullAllowed;
-        temp = temp.replace('(',' ');
+        String temp = type;
+        temp = temp.replace('(', ' ');
         String[] arr = temp.split(" ");
         this.type = DataType.valueOf(arr[0]);
-        this.typeLen = Integer.parseInt(arr[1].replace(')',' ').trim());
+        this.typeLen = Integer.parseInt(arr[1].replace(')', ' ').trim());
+    }
+
+    public Column(final String field, final DataType type, final int typeLen, final boolean nullAllowed) {
+        this.field = field;
+        this.type = type;
+        this.typeLen = typeLen;
+        this.nullAllowed = nullAllowed;
+    }
+
+    @Override
+    public String toString() {
+        return field + ' ' + type + ' ' + typeLen + "| NULL ALLOWED = " + nullAllowed + '\n';
     }
 
     public String getField() {

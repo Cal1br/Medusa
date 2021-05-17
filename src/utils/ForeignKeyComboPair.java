@@ -1,5 +1,6 @@
 package utils;
 
+import models.Key;
 import tabs.CRUDPanel;
 
 import javax.swing.*;
@@ -8,27 +9,36 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ForeignKeyComboPair extends JPanel {
-    private String foreignKey = "";
-    private JLabel label = null;
+    private Key foreignKey;
+    private JLabel label;
     private JComboBox<String> comboBox = new JComboBox<>();
     private List<String> names = new LinkedList<>();
-    private String foreignTableName = "";
+
+    public String getForeignTableName() {
+        return foreignKey.getReferencedTable();
+    }
+
     private CRUDPanel origin;
+
+
     //todo optimize this too, get a reference sql
-    public ForeignKeyComboPair(CRUDPanel origin, String key) {
-        this.origin = origin;
+    public ForeignKeyComboPair(CRUDPanel origin, Key foreignKey) {
+        this.foreignKey=foreignKey;
+        label = new JLabel(foreignKey.getColumnName().replace("_ID",""));
+        this.setLayout(new GridLayout(1, 2));
+        this.setMaximumSize(new Dimension(800, 20));
+        names = findNames(foreignKey.getReferencedTable());
+        this.add(label);
+        this.add(comboBox);
+/*        this.origin = origin;
+        foreignKey = key;
         foreignTableName = findTableName(foreignKey);
         names = findNames(foreignTableName);
-        foreignKey = key;
         this.setLayout(new GridLayout(1, 2));
         this.setMaximumSize(new Dimension(800, 20));
         label = new JLabel(key.replace("_ID", ""));
         this.add(label);
-        this.add(comboBox);
-    }
-
-    public String getForeignTableName() {
-        return foreignTableName;
+        this.add(comboBox);*/
     }
 
     public List<String> getNames() {
@@ -36,8 +46,8 @@ public class ForeignKeyComboPair extends JPanel {
     }
 
     //намира името на таблицата с което се идентифицира обекта, например име на човек
-    //todo edit?
-    //todo add Cyrillic
+    //todo тука ще се направи така че да се вижда от Config как да се казва
+    @Deprecated
     private List<String> findNames(String tableName) {
         final List<String> columnNames = DBTool.getInstance().getColumnNames(tableName);
         String fNameColumn = "";
@@ -55,20 +65,6 @@ public class ForeignKeyComboPair extends JPanel {
         }
         names.add(fNameColumn);
         return names;
-    }
-
-    //намира как се казва таблицата от ключа
-    private String findTableName(String key) {
-        int shortestHamming = Integer.MAX_VALUE;
-        List<String> list = DBTool.getInstance().getTableNames();
-        for (String name : list) {
-            int distance = Tools.HammingDistance(key, name.toLowerCase());
-            if (distance < shortestHamming) {
-                shortestHamming = distance;
-                foreignTableName = name; //todo add more than 1 foreign key
-            }
-        }
-        return foreignTableName;
     }
 
     //TODO clean up
