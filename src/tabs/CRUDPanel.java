@@ -25,6 +25,7 @@ public class CRUDPanel extends JPanel {
     private final List<Column> foreignIdColumns = new LinkedList<>();
     private final List<Column> columns = new LinkedList<>(); //only filtered columns
     private final List<Pair> pairs = new LinkedList<>();
+    private final List<ForeignKeyComboPair> foreignPairs = new LinkedList<>(); // TODO major refactor така че FOREIGNKEYCOMBOPAIR да extendva ot pair
     private final JTable table = new JTable();
     private final MouseListener tableListener = new TableListener(this);
     private final JScrollPane scrollPlane = new JScrollPane(table);
@@ -55,7 +56,9 @@ public class CRUDPanel extends JPanel {
             this.add(pair);
         }
         for (Column column : foreignIdColumns) {
-            this.add(new ForeignKeyComboPair(column.getField()));
+            final ForeignKeyComboPair keyComboPair = new ForeignKeyComboPair(this, column.getField());
+            this.add(keyComboPair);
+            foreignPairs.add(keyComboPair);
         }
 
 
@@ -92,6 +95,14 @@ public class CRUDPanel extends JPanel {
         updateModel();//пълним table първоначално
         this.add(scrollPlane);
         this.setVisible(true);
+    }
+
+    public List<Column> getForeignIdColumns() {
+        return foreignIdColumns;
+    }
+
+    public List<ForeignKeyComboPair> getForeignPairs() {
+        return foreignPairs;
     }
 
     public List<Long> getIdList() {
@@ -166,6 +177,7 @@ public class CRUDPanel extends JPanel {
     public List<Pair> getPairs() {
         return pairs;
     }
+    //TODO да се проверяват дали нещата не са null или трябва или не трябва да са null
     //TODO ADD TOOLTIPS FOR BUTTONS!
     //TODO combo box-a който е с foreign key-ovete трябва да се направи така че да чете от config кой файл да избира...
     //TODO aко няма config, да се създава

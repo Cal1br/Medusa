@@ -2,6 +2,7 @@ package utils;
 
 import models.Column;
 import models.ExperimentalModel;
+import models.Pair;
 import tabs.CRUDPanel;
 
 import javax.swing.*;
@@ -159,7 +160,7 @@ public class DBTool {
             while (set.next()) {
                 if (set.getString(1).equals("PRIMARY KEY")) {
                     map.put(set.getString(2), true);
-                } else {
+                } else if(set.getString(1).equals("REFERENTIAL")){
                     map.put(set.getString(2), false);
                 }
             }
@@ -185,22 +186,15 @@ public class DBTool {
         return list;
     }
 
-    public void executeSql(final String sql) throws SQLException {
-        System.out.println(sql);
-        connection = getConnection();
-        PreparedStatement statement = connection.prepareStatement(sql);
-        statement.execute();
-    }
-
-    public TableModel getModelWhere(final String tableName, final String selectedColumn, final String text) {
-        NotModel model = null;
+    public TableModel getModelForColumnsWhere(final String tableName, final String selectedColumn, final String text){
+        AbstractTableModel model = null;
         //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
         String sql = "SELECT * FROM " + tableName + " WHERE " + selectedColumn + " iLIKE '" + text + "%'"; //iLike = ignoreCaseLike
         try {
             connection = getConnection();
             sqlStatement = connection.prepareStatement(sql);
             set = sqlStatement.executeQuery();
-            model = new NotModel(set);
+            model = new ExperimentalModel(set);
 
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -234,6 +228,58 @@ public class DBTool {
             connection = getConnection();
             sqlStatement = connection.prepareStatement(sql);
             sqlStatement.execute();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
+
+    public void add(final CRUDPanel origin) throws SQLException {
+        StringBuilder columnsSb = new StringBuilder("INSERT INTO " + origin.getTableName() + "(");
+        StringBuilder valuesSb = new StringBuilder(" VALUES (");
+
+        for (Pair pair : origin.getPairs()) {
+            columnsSb.append(pair.getColumn().getField()).append(", ");
+            valuesSb.append(pair.getFormattedTextFieldText()).append(", ");
+        }
+        columnsSb.replace(columnsSb.length() - 2, columnsSb.length(), ")");
+        valuesSb.replace(valuesSb.length() - 2, valuesSb.length(), ")");
+        columnsSb.append(valuesSb);
+        connection = getConnection();
+        PreparedStatement statement = connection.prepareStatement(columnsSb.toString());
+        statement.execute();
+    }
+
+    public void updateAt(final long selectedId, final CRUDPanel origin) throws SQLException {
+        StringBuilder sql = new StringBuilder("UPDATE " + origin.getTableName() + " SET ");
+        for (Pair pair : origin.getPairs()) {
+            sql.append(pair.getColumn().getField()).append(" = ");
+            sql.append(pair.getFormattedTextFieldText()).append(", ");
+        }
+        System.out.println(sql);
+        sql.deleteCharAt(sql.length()-1);
+        sql.deleteCharAt(sql.length()-1);
+        System.out.println(sql);
+        sql.append(" WHERE ").append(origin.getIdColumn()).append(" = ").append(selectedId);
+        connection = getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql.toString());
+        statement.execute();
+    }
+
+    public void updateComboBox(final CRUDPanel origin, final ForeignKeyComboPair foreignKeyComboPair) {
+        final List<String> names = foreignKeyComboPair.getNames();
+        JComboBox<String> comboBox = foreignKeyComboPair.getComboBox();
+        String sql = "select " + names.get(0) + " from " + foreignKeyComboPair.getForeignTableName();
+        try {
+            Connection connection = DBTool.getInstance().getConnection();
+            PreparedStatement statement = connection.prepareStatement(sql);
+/*            statement.setString(2,tableName);
+            statement.setString(1,names.get(0));*/
+            //todo see wtf is this?
+            ResultSet set = statement.executeQuery();
+            comboBox.removeAllItems();
+            while (set.next()) {
+                comboBox.addItem(set.getString(1));
+            }
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
         }

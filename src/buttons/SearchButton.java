@@ -38,7 +38,7 @@ public class SearchButton extends JButton {
                 final String text = searchText.getText();
                 final String selectedColumn = searchBar.getSelectedItem().toString();
                 JTable table = origin.getTable();
-                table.setModel(DBTool.getInstance().getModelWhere(origin.getTableName(), selectedColumn, text));
+                table.setModel(DBTool.getInstance().getModelForColumnsWhere(origin.getTableName(), selectedColumn, text));
             }
         }
     }

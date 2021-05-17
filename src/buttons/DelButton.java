@@ -11,7 +11,6 @@ import java.util.List;
 
 public class DelButton extends JButton {
     private CRUDPanel origin = null;
-    private int selected = -1;
     private long selectedId = -1;
 
     public DelButton(final String str, final CRUDPanel crudPanel) {
@@ -25,9 +24,8 @@ public class DelButton extends JButton {
         @Override
         public void actionPerformed(final ActionEvent e) {
             TableListener listener = (TableListener) origin.getTableListener();
-            selected = listener.getSelected();
             final List<Long> idList = origin.getIdList();
-            selectedId = idList.get(selected);
+            selectedId = idList.get(listener.getSelected());
             DBTool.getInstance().deleteAt(selectedId,origin.getTableName(),origin.getIdColumn());
             origin.updateModel();
             //  final ActionListener[] actionListeners = this.getActionListeners();
