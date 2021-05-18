@@ -56,12 +56,12 @@ public class DBTool {
                 file.getParentFile().mkdirs();
                 file.createNewFile();
                 FileOutputStream fileOutputStream = new FileOutputStream(file);
-                properties.setProperty("db_path","");
-                properties.setProperty("db_driver","");
-                properties.setProperty("db_username","");
-                properties.setProperty("db_password","");
-                properties.setProperty("combo_box_auto_configure","");
-                properties.store(fileOutputStream,"properties");
+                properties.setProperty("db_path", "");
+                properties.setProperty("db_driver", "");
+                properties.setProperty("db_username", "");
+                properties.setProperty("db_password", "");
+                properties.setProperty("combo_box_auto_configure", "");
+                properties.store(fileOutputStream, "properties");
 
             } catch (IOException exception) {
                 exception.printStackTrace();
@@ -176,17 +176,17 @@ public class DBTool {
             set = sqlStatement.executeQuery();
             while (set.next()) {
                 if (set.getString(1).equals("PRIMARY KEY")) {
-                    list.add(new Key(tableName,set.getString(2),true));
-                } else if(set.getString(1).equals("REFERENTIAL")){
+                    list.add(new Key(tableName, set.getString(2), true));
+                } else if (set.getString(1).equals("REFERENTIAL")) {
                     //a little hacky... I know
                     final String string = set.getString(3);
                     final int start = string.indexOf("REFERENCES");
 
                     final String substring = string.substring(start);
                     StringBuilder sb = new StringBuilder(substring);
-                    sb.delete(0,20);
+                    sb.delete(0, 20);
                     final String[] split = sb.toString().split("[()]");
-                    list.add(new Key(tableName,set.getString(2),split[0],split[1]));
+                    list.add(new Key(tableName, set.getString(2), split[0], split[1]));
                 }
             }
         } catch (SQLException e) {
@@ -211,7 +211,7 @@ public class DBTool {
         return list;
     }
 
-    public TableModel getModelForColumnsWhere(final String tableName, final String selectedColumn, final String text){
+    public TableModel getModelForColumnsWhere(final String tableName, final String selectedColumn, final String text) {
         AbstractTableModel model = null;
         //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
         String sql = "SELECT * FROM " + tableName + " WHERE " + selectedColumn + " iLIKE '" + text + "%'"; //iLike = ignoreCaseLike
@@ -266,9 +266,13 @@ public class DBTool {
             columnsSb.append(pair.getColumn().getField()).append(", ");
             valuesSb.append(pair.getFormattedTextFieldText()).append(", ");
         }
-        for(ForeignKeyComboPair pair: origin.getForeignPairs()){
+        for (ForeignKeyComboPair pair : origin.getForeignPairs()) {
+            if (pair.getColumn().isNullAllowed() && pair.getSelectedId() == -1) {
+                valuesSb.append("NULL").append(", ");
+            } else {
+                valuesSb.append(pair.getSelectedId()).append(", ");
+            }
             columnsSb.append(pair.getForeignKey().getColumnName()).append(", ");
-            valuesSb.append(pair.getSelectedId()).append(", ");
         }
         columnsSb.replace(columnsSb.length() - 2, columnsSb.length(), ")");
         valuesSb.replace(valuesSb.length() - 2, valuesSb.length(), ")");
@@ -285,8 +289,8 @@ public class DBTool {
             sql.append(pair.getFormattedTextFieldText()).append(", ");
         }
         System.out.println(sql);
-        sql.deleteCharAt(sql.length()-1);
-        sql.deleteCharAt(sql.length()-1);
+        sql.deleteCharAt(sql.length() - 1);
+        sql.deleteCharAt(sql.length() - 1);
         System.out.println(sql);
         sql.append(" WHERE ").append(origin.getIdColumn()).append(" = ").append(selectedId);
         connection = getConnection();
@@ -298,7 +302,7 @@ public class DBTool {
         final String names = foreignKeyComboPair.getName();
         JComboBox<String> comboBox = foreignKeyComboPair.getComboBox();
         final List<Long> idList = foreignKeyComboPair.getIdList();
-        String sql = "select "+foreignKeyComboPair.getForeignKey().getReferenceTableKeyColumn()+", " +  names + " from " + foreignKeyComboPair.getForeignTableName();
+        String sql = "select " + foreignKeyComboPair.getForeignKey().getReferenceTableKeyColumn() + ", " + names + " from " + foreignKeyComboPair.getForeignTableName();
         try {
             Connection connection = DBTool.getInstance().getConnection();
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -307,9 +311,10 @@ public class DBTool {
             //todo see wtf is this?
             ResultSet set = statement.executeQuery();
             comboBox.removeAllItems();
-            if(foreignKeyComboPair.getColumn().isNullAllowed()){
+            idList.clear();
+            if (foreignKeyComboPair.getColumn().isNullAllowed()) {
                 idList.add(-1L);
-                comboBox.addItem(null);
+                comboBox.addItem("");
             }
             while (set.next()) {
                 idList.add(set.getLong(1));
