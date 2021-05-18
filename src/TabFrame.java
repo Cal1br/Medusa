@@ -1,5 +1,5 @@
-import models.Column;
 import tabs.CRUDPanel;
+import tabs.JoinPanel;
 import utils.DBTool;
 import utils.ForeignKeyComboPair;
 
@@ -45,5 +45,6 @@ public class TabFrame extends JFrame {
             panels.add(panel);
             tabbedPane.add(panel, tableName);
         }
+        tabbedPane.add(new JoinPanel(),"Join заявки");
     }
 }

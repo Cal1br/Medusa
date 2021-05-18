@@ -59,7 +59,7 @@ public class CRUDPanel extends JPanel {
             this.add(pair);
         }
         for (KeyColumn column : foreignKeyColumns) {
-            final ForeignKeyComboPair keyComboPair = new ForeignKeyComboPair(this, column.getKey());
+            final ForeignKeyComboPair keyComboPair = new ForeignKeyComboPair(column, column.getKey());
             this.add(keyComboPair);
             foreignPairs.add(keyComboPair);
         }
@@ -92,12 +92,11 @@ public class CRUDPanel extends JPanel {
         table.addMouseListener(tableListener);
         searchButtonListener = new SearchButtonListener(searchPanel);
         searchBtn.addMouseListener(searchButtonListener);
-        scrollPlane.setPreferredSize(new Dimension(450, 150));
         System.out.println(idColumn + " " + tableName);
         System.out.println(foreignKeyColumns.toString() + " " + tableName);
-        updateModel();//пълним table първоначално
         this.add(scrollPlane);
         this.setVisible(true);
+        updateModel();//пълним table първоначално
     }
 
 

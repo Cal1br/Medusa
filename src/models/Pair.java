@@ -8,7 +8,6 @@ import java.awt.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Locale;
 
 public class Pair extends JPanel {
@@ -87,6 +86,8 @@ public class Pair extends JPanel {
             case INTEGER:
             case BIGINT:
                 return st.replaceAll(",","");
+            case DECIMAL:
+                return st.replaceAll(",",".");
             default:
                 st = "\'"+st+"\'";
         }

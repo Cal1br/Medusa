@@ -9,8 +9,10 @@ import tabs.CRUDPanel;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -48,7 +50,22 @@ public class DBTool {
             DBUsername = properties.getProperty("db_username");
             DBPassword = properties.getProperty("db_password");
 
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e) { //
+            try {
+                File file = new File("src/config/config.properties");
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+                FileOutputStream fileOutputStream = new FileOutputStream(file);
+                properties.setProperty("db_path","");
+                properties.setProperty("db_driver","");
+                properties.setProperty("db_username","");
+                properties.setProperty("db_password","");
+                properties.setProperty("combo_box_auto_configure","");
+                properties.store(fileOutputStream,"properties");
+
+            } catch (IOException exception) {
+                exception.printStackTrace();
+            }
             e.printStackTrace(); //TODO create config or show error|create default config
         } catch (IOException e) {
             e.printStackTrace();
@@ -277,7 +294,7 @@ public class DBTool {
         statement.execute();
     }
 
-    public void updateComboBox(final CRUDPanel origin, final ForeignKeyComboPair foreignKeyComboPair) {
+    public void updateComboBox(final ForeignKeyComboPair foreignKeyComboPair) {
         final String names = foreignKeyComboPair.getName();
         JComboBox<String> comboBox = foreignKeyComboPair.getComboBox();
         final List<Long> idList = foreignKeyComboPair.getIdList();
@@ -290,6 +307,10 @@ public class DBTool {
             //todo see wtf is this?
             ResultSet set = statement.executeQuery();
             comboBox.removeAllItems();
+            if(foreignKeyComboPair.getColumn().isNullAllowed()){
+                idList.add(-1L);
+                comboBox.addItem(null);
+            }
             while (set.next()) {
                 idList.add(set.getLong(1));
                 comboBox.addItem(set.getString(2));
