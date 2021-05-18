@@ -251,6 +251,10 @@ public class DBTool {
             columnsSb.append(pair.getColumn().getField()).append(", ");
             valuesSb.append(pair.getFormattedTextFieldText()).append(", ");
         }
+        for(ForeignKeyComboPair pair: origin.getForeignPairs()){
+            columnsSb.append(pair.getForeignKey().getColumnName()).append(", ");
+            valuesSb.append(pair.getSelectedId()).append(", ");
+        }
         columnsSb.replace(columnsSb.length() - 2, columnsSb.length(), ")");
         valuesSb.replace(valuesSb.length() - 2, valuesSb.length(), ")");
         columnsSb.append(valuesSb);
@@ -278,7 +282,8 @@ public class DBTool {
     public void updateComboBox(final CRUDPanel origin, final ForeignKeyComboPair foreignKeyComboPair) {
         final List<String> names = foreignKeyComboPair.getNames();
         JComboBox<String> comboBox = foreignKeyComboPair.getComboBox();
-        String sql = "select " + names.get(0) + " from " + foreignKeyComboPair.getForeignTableName();
+        final List<Long> idList = foreignKeyComboPair.getIdList();
+        String sql = "select "+foreignKeyComboPair.getForeignKey().getReferenceTableKeyColumn()+", " +  names.get(0) + " from " + foreignKeyComboPair.getForeignTableName();
         try {
             Connection connection = DBTool.getInstance().getConnection();
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -288,7 +293,8 @@ public class DBTool {
             ResultSet set = statement.executeQuery();
             comboBox.removeAllItems();
             while (set.next()) {
-                comboBox.addItem(set.getString(1));
+                idList.add(set.getLong(1));
+                comboBox.addItem(set.getString(2));
             }
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();

@@ -13,7 +13,7 @@ public class ForeignKeyComboPair extends JPanel {
     private JLabel label;
     private JComboBox<String> comboBox = new JComboBox<>();
     private List<String> names = new LinkedList<>();
-
+    private List<Long> idList = new LinkedList<>();
     public String getForeignTableName() {
         return foreignKey.getReferencedTable();
     }
@@ -23,8 +23,8 @@ public class ForeignKeyComboPair extends JPanel {
 
     //todo optimize this too, get a reference sql
     public ForeignKeyComboPair(CRUDPanel origin, Key foreignKey) {
-        this.foreignKey=foreignKey;
-        label = new JLabel(foreignKey.getColumnName().replace("_ID",""));
+        this.foreignKey = foreignKey;
+        label = new JLabel(foreignKey.getColumnName().replace("_ID", ""));
         this.setLayout(new GridLayout(1, 2));
         this.setMaximumSize(new Dimension(800, 20));
         names = findNames(foreignKey.getReferencedTable());
@@ -77,5 +77,17 @@ public class ForeignKeyComboPair extends JPanel {
 
     public JComboBox<String> getComboBox() {
         return comboBox;
+    }
+
+    public Key getForeignKey() {
+        return foreignKey;
+    }
+
+    public List<Long> getIdList() {
+        return idList;
+    }
+
+    public long getSelectedId() {
+        return idList.get(comboBox.getSelectedIndex());
     }
 }
