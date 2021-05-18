@@ -19,8 +19,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -280,10 +278,10 @@ public class DBTool {
     }
 
     public void updateComboBox(final CRUDPanel origin, final ForeignKeyComboPair foreignKeyComboPair) {
-        final List<String> names = foreignKeyComboPair.getNames();
+        final String names = foreignKeyComboPair.getName();
         JComboBox<String> comboBox = foreignKeyComboPair.getComboBox();
         final List<Long> idList = foreignKeyComboPair.getIdList();
-        String sql = "select "+foreignKeyComboPair.getForeignKey().getReferenceTableKeyColumn()+", " +  names.get(0) + " from " + foreignKeyComboPair.getForeignTableName();
+        String sql = "select "+foreignKeyComboPair.getForeignKey().getReferenceTableKeyColumn()+", " +  names + " from " + foreignKeyComboPair.getForeignTableName();
         try {
             Connection connection = DBTool.getInstance().getConnection();
             PreparedStatement statement = connection.prepareStatement(sql);
