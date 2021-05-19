@@ -54,7 +54,7 @@ public class Pair extends JPanel {
             case DECIMAL:
                 //todo понеже decimal се задава като (общо,числа след знака) а h2 го връща само общо, трябва да има конфиг оф който да се взимат числата след запетаята, и да има default
                 //MaskFormatter nf = new DecimalFormat(NumberFormat.getInstance());
-                NumberFormat numFormat = new DecimalFormat("#0,000.00");
+                NumberFormat numFormat = new DecimalFormat("000.00");
                 numFormat.setMaximumFractionDigits(2);
                 numFormat.setMaximumIntegerDigits(column.getTypeLen() - 2);
                 NumberFormatter numFormatter = new NumberFormatter(numFormat);
@@ -88,6 +88,8 @@ public class Pair extends JPanel {
                 return st.replaceAll(",","");
             case DECIMAL:
                 return st.replaceAll(",",".");
+            case TINYINT:
+                return st;
             default:
                 st = "\'"+st+"\'";
         }

@@ -10,6 +10,7 @@ import models.Column;
 import models.Key;
 import models.KeyColumn;
 import models.Pair;
+import utils.ComboUpdaterInterface;
 import utils.DBTool;
 import utils.ForeignKeyComboPair;
 import utils.MemoryComboBox;
@@ -23,7 +24,7 @@ import java.util.List;
 
 //todo update combo box on tab click
 //todo UUID
-public class CRUDPanel extends JPanel {
+public class CRUDPanel extends JPanel implements ComboUpdaterInterface {
     private final List<KeyColumn> foreignKeyColumns = new LinkedList<>();
     private final List<Column> columns = new LinkedList<>(); //only filtered columns
     private final List<Pair> pairs = new LinkedList<>();
@@ -146,7 +147,6 @@ public class CRUDPanel extends JPanel {
      */
     private void filterColumnNamesAndDataTypes() {
 
-        //final HashMap<String, Boolean> keys = DBTool.getInstance().getTableKeys(tableName);
         keysList = DBTool.getInstance().getTableKeys(tableName);
         HashMap<String,Key> map = new HashMap<>(); //hashmap is always the answer
         for(Key key : keysList){

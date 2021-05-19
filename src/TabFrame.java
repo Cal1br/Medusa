@@ -18,11 +18,13 @@ public class TabFrame extends JFrame {
         tabbedPane.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                CRUDPanel focusedPanel = (CRUDPanel) tabbedPane.getSelectedComponent();
-                focusedPanel.updateModel();
-                final List<ForeignKeyComboPair> foreignPairs = focusedPanel.getForeignPairs();
-                for(ForeignKeyComboPair foreign : foreignPairs){
-                    foreign.updateComboBox();
+                if(tabbedPane.getSelectedComponent().getClass()==CRUDPanel.class){
+                    CRUDPanel focusedPanel = (CRUDPanel) tabbedPane.getSelectedComponent();
+                    focusedPanel.updateModel();
+                    final List<ForeignKeyComboPair> foreignPairs = focusedPanel.getForeignPairs();
+                    for(ForeignKeyComboPair foreign : foreignPairs){
+                        foreign.updateComboBox();
+                    }
                 }
             }
         });

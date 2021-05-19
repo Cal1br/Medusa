@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -160,11 +161,11 @@ public class DBTool {
     }
 
     /**
-     * Returns primary and foreign keys. Boolean value is true if it is the primary key, and false if it is a
-     * foreign key.
+     * Returns primary and foreign keys.
      *
-     * @param tableName
-     * @return HashMap
+     * @param tableName name of the table
+     * @return Returns primary and foreign keys in List<Key> format. Boolean value is true if it is the primary key, and false if it is a
+     * foreign key.
      */
     public List<Key> getTableKeys(final String tableName) {
         List<Key> list = new LinkedList<>();
@@ -209,6 +210,18 @@ public class DBTool {
             sqlException.printStackTrace();
         }
         return list;
+    }
+
+    public List<Column> getColumnNamesAndTypesWithoutKeys(String tableName) {
+        final List<Key> keyList = DBTool.getInstance().getTableKeys(tableName);
+        List<Column> columnList = DBTool.getInstance().getColumnNamesAndType(tableName);
+        HashMap<String, Key> map = new HashMap<>(); //hashmap is always the answer
+        for (Key key : keyList) {
+            map.put(key.getColumnName(), key);
+        }
+        return columnList.stream().filter(column ->
+                !map.containsKey(column.getField())
+        ).collect(Collectors.toList());
     }
 
     public TableModel getModelForColumnsWhere(final String tableName, final String selectedColumn, final String text) {
