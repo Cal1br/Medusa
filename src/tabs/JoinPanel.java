@@ -6,6 +6,7 @@ import models.Key;
 import utils.DBTool;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,7 +22,6 @@ public class JoinPanel extends JPanel {
     JRadioButton innerJoin;
     JRadioButton leftJoin;
     JRadioButton rightJoin;
-    JRadioButton fullJoin;
     private JComboBox<String> leftTable = new JComboBox<>();
     private JComboBox<String> rightTable = new JComboBox<>();
     private SearchPanel leftSearchPanel = new SearchPanel(leftTable);
@@ -40,36 +40,36 @@ public class JoinPanel extends JPanel {
         JPanel right = new JPanel();
         topPanel.setLayout(new GridLayout(1, 3));
         left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
-        middle.setLayout(new GridLayout(2, 2));
+        middle.setLayout(new GridLayout(3, 1));
         right.setLayout(new BoxLayout(right, BoxLayout.Y_AXIS));
         searchPanelsHolder.setLayout(new BoxLayout(searchPanelsHolder, BoxLayout.X_AXIS));
         innerJoin = new JRadioButton("Inner Join");
         leftJoin = new JRadioButton("Left Join");
         rightJoin = new JRadioButton("Right Join");
-        fullJoin = new JRadioButton("Full Join");
         left.add(leftTable);
         middle.add(leftJoin);
         middle.add(rightJoin);
         middle.add(innerJoin);
-        middle.add(fullJoin);
         right.add(rightTable);
         buttonGroup.add(innerJoin);
         buttonGroup.add(leftJoin);
         buttonGroup.add(rightJoin);
-        buttonGroup.add(fullJoin);
         searchPanelsHolder.add(leftSearchPanel);
         searchPanelsHolder.add(rightSearchPanel);
-
+        searchPanelsHolder.setMaximumSize(new Dimension(750,50));
+        searchPanelsHolder.setBorder(new EmptyBorder(20,5,15,5));
         topPanel.add(left);
         topPanel.add(middle);
         topPanel.add(right);
-        topPanel.setMaximumSize(new Dimension(600, 35));
+        topPanel.setMaximumSize(new Dimension(650, 35));
         midPanel.add(joinSearchButton);
+        joinSearchButton.setPreferredSize(new Dimension(670,20));
         joinSearchButton.addActionListener(new SearchAction(this));
         this.add(topPanel);
-        this.add(midPanel);
         this.add(searchPanelsHolder);
+        this.add(midPanel);
         this.add(scrollPlane);
+        scrollPlane.setVisible(true);
         updateTableBoxes();
     }
 
@@ -120,6 +120,9 @@ public class JoinPanel extends JPanel {
     private class SearchPanel extends JPanel {
         boolean emptySelection = true;
         JPanel radioHolder = new JPanel();
+        JRadioButton more = new JRadioButton(">");
+        JRadioButton equal = new JRadioButton("=");
+        JRadioButton less = new JRadioButton("<");
         private JComboBox<String> columnComboBox = new JComboBox();
         private List<Column> columnList;
         private JTextField searchField = new JTextField();
@@ -132,7 +135,7 @@ public class JoinPanel extends JPanel {
             searchField.setPreferredSize(new Dimension(150, 30));
             columnComboBox.setPreferredSize(new Dimension(150, 30));
             columnComboBox.addItemListener(new selectionListener());
-            this.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.RED));
+            this.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, Color.BLACK));
             JPanel queryHolder = new JPanel();
             radioHolder.setLayout(new BoxLayout(radioHolder, BoxLayout.Y_AXIS));
             queryHolder.setLayout(new GridLayout(1, 2));
@@ -141,9 +144,6 @@ public class JoinPanel extends JPanel {
             queryHolder.setMinimumSize(new Dimension(300, 35));
             this.setLayout(new GridBagLayout());
             //queryHolder.setLayout(new GridLayout(1,2));
-            JRadioButton more = new JRadioButton(">");
-            JRadioButton equal = new JRadioButton("=");
-            JRadioButton less = new JRadioButton("<");
             radioButtons.add(more);
             radioButtons.add(equal);
             radioButtons.add(less);
@@ -178,6 +178,18 @@ public class JoinPanel extends JPanel {
             }
         }
 
+        public JRadioButton getMore() {
+            return more;
+        }
+
+        public JRadioButton getEqual() {
+            return equal;
+        }
+
+        public JRadioButton getLess() {
+            return less;
+        }
+
         private class selectionListener implements java.awt.event.ItemListener {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -194,7 +206,8 @@ public class JoinPanel extends JPanel {
                             emptySelection = false;
                             break;
                         default:
-                            emptySelection = true;
+                            radioButtons.clearSelection();
+                            emptySelection = false;
                             radioHolder.setVisible(false);
                     }
 
@@ -247,8 +260,6 @@ public class JoinPanel extends JPanel {
                 sb.append(" LEFT JOIN ").append(rightTable).append(" R ON ");
             } else if (selectedModel.equals(rightJoin.getModel())) {
                 sb.append(" RIGHT JOIN ").append(rightTable).append(" R ON ");
-            } else if (selectedModel.equals(fullJoin.getModel())) {
-                sb.append(" FULL OUTER JOIN ").append(rightTable).append(" R ON ");
             }
             Key primaryKey = null;
             Key foreignKey = null;
@@ -257,7 +268,7 @@ public class JoinPanel extends JPanel {
                 if (leftKeys.get(n).isPrimaryKey()) {
                     primaryKey = leftKeys.get(n);
                     for (Key key : rightKeys) {
-                        if (!key.isPrimaryKey()&&key.getReferencedTable().equals(leftTable)
+                        if (!key.isPrimaryKey() && key.getReferencedTable().equals(leftTable)
                                 && key.getReferenceTableKeyColumn().
                                 equals(primaryKey.getColumnName())) {
                             foreignKey = key;
@@ -270,12 +281,12 @@ public class JoinPanel extends JPanel {
             if (!match) {
                 primaryKey = null;
                 foreignKey = null;
-                for (int n = 0; primaryKey==null;n++){
-                    if(rightKeys.get(n).isPrimaryKey()){
+                for (int n = 0; primaryKey == null; n++) {
+                    if (rightKeys.get(n).isPrimaryKey()) {
                         primaryKey = rightKeys.get(n);
-                        for(Key key : leftKeys){
-                            if(!key.isPrimaryKey()&&key.getReferencedTable().equals(rightTable)&&key.getReferenceTableKeyColumn().equals(primaryKey.getColumnName())){
-                                foreignKey=key;
+                        for (Key key : leftKeys) {
+                            if (!key.isPrimaryKey() && key.getReferencedTable().equals(rightTable) && key.getReferenceTableKeyColumn().equals(primaryKey.getColumnName())) {
+                                foreignKey = key;
                                 match = true;
                                 break;
                             }
@@ -284,7 +295,7 @@ public class JoinPanel extends JPanel {
                 }
 
             }
-            if(!match){
+            if (!match) {
                 return;
             }
             sb.append("L.").append(primaryKey.getColumnName()).append("=R.").append(foreignKey.getColumnName());
@@ -294,13 +305,41 @@ public class JoinPanel extends JPanel {
                 System.out.println(sb);
                 table.setModel(DBTool.getInstance().executeSqlAndReturnTableModel(sb.toString()));
             }
-            if (rightSearchPanel.emptySelection) {
+            if (!leftSearchPanel.emptySelection || !rightSearchPanel.emptySelection) { //АКО ЕДНО ОТ ТЯХ НЕ Е EMPTY
+                sb.append(" WHERE "); //ТОГАВА КЪДЕТО
+                boolean and = false;
+                if (!leftSearchPanel.emptySelection) { //ПРОВЕРЯВАМЕ ЛЕВИЯ
+                    final String selectedColumn = leftSearchPanel.getColumnComboBox().getSelectedItem().toString();
+                    FilterChecker(sb, leftSearchPanel, selectedColumn);
+                    and = true;
+                }if (!rightSearchPanel.emptySelection){ //ПРОВЕРЯВАМЕ ДЕСНИЯ
+                    final String selectedColumn = rightSearchPanel.getColumnComboBox().getSelectedItem().toString();
+                    if(and) sb.append(" AND ");
+                    FilterChecker(sb, rightSearchPanel, selectedColumn);
 
+                }
+                table.setModel(DBTool.getInstance().executeSqlAndReturnTableModel(sb.toString()));
             }
-            final ButtonModel leftSelection = leftSearchPanel.radioButtons.getSelection();
-            final ButtonModel rightSelection = rightSearchPanel.radioButtons.getSelection();
             //   if(leftSelection.equals())
+        }
+
+        private void FilterChecker(final StringBuilder sb, final SearchPanel rightSearchPanel, final String selectedColumn) {
+            if (rightSearchPanel.getRadioButtons().getSelection() == null) {
+                sb.append(selectedColumn).append(" iLIKE '").append(rightSearchPanel.getSearchField().getText()).append("%'");
+            } else {
+                sb.append(selectedColumn);
+                SearchPanel panel = rightSearchPanel;
+                final ButtonModel selection = rightSearchPanel.getRadioButtons().getSelection();
+                if (selection.equals(panel.getEqual().getModel())) {
+                    sb.append("=").append(panel.getSearchField().getText());
+                } else if (selection.equals(panel.getLess().getModel())) {
+                    sb.append("<").append(panel.getSearchField().getText());
+                } else if (selection.equals(panel.getMore().getModel())) {
+                    sb.append(">").append(panel.getSearchField().getText());
+                }
+            }
         }
     }
 }
 //Select * from states s join water_body w on s.state_id=w.state_id where water_area > 5
+//SELECT * FROM STATES L JOIN WATER_BODY R ON L.STATE_ID=R.STATE_ID
