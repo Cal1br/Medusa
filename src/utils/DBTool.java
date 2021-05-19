@@ -337,4 +337,18 @@ public class DBTool {
             sqlException.printStackTrace();
         }
     }
+
+    public TableModel executeSqlAndReturnTableModel(String sql) {
+        AbstractTableModel model = null;
+        try {
+            connection = getConnection();
+            sqlStatement = connection.prepareStatement(sql);
+            set = sqlStatement.executeQuery();
+            model = new NotModel(set);
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return model;
+    }
 }

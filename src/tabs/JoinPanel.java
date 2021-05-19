@@ -2,6 +2,7 @@ package tabs;
 
 import buttons.JoinSearchButton;
 import models.Column;
+import models.Key;
 import utils.DBTool;
 
 import javax.swing.*;
@@ -10,12 +11,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JoinPanel extends JPanel {
     private final JoinSearchButton joinSearchButton = new JoinSearchButton("Search", this); // todo sus
     private final JTable table = new JTable();
     private final JScrollPane scrollPlane = new JScrollPane(table);
     private final ButtonGroup buttonGroup = new ButtonGroup();
+    JRadioButton innerJoin;
+    JRadioButton leftJoin;
+    JRadioButton rightJoin;
+    JRadioButton fullJoin;
     private JComboBox<String> leftTable = new JComboBox<>();
     private JComboBox<String> rightTable = new JComboBox<>();
     private SearchPanel leftSearchPanel = new SearchPanel(leftTable);
@@ -37,10 +43,10 @@ public class JoinPanel extends JPanel {
         middle.setLayout(new GridLayout(2, 2));
         right.setLayout(new BoxLayout(right, BoxLayout.Y_AXIS));
         searchPanelsHolder.setLayout(new BoxLayout(searchPanelsHolder, BoxLayout.X_AXIS));
-        JRadioButton innerJoin = new JRadioButton("Inner Join");
-        JRadioButton leftJoin = new JRadioButton("Left Join");
-        JRadioButton rightJoin = new JRadioButton("Right Join");
-        JRadioButton fullJoin = new JRadioButton("Full Join");
+        innerJoin = new JRadioButton("Inner Join");
+        leftJoin = new JRadioButton("Left Join");
+        rightJoin = new JRadioButton("Right Join");
+        fullJoin = new JRadioButton("Full Join");
         left.add(leftTable);
         middle.add(leftJoin);
         middle.add(rightJoin);
@@ -222,11 +228,79 @@ public class JoinPanel extends JPanel {
 
         @Override
         public void actionPerformed(final ActionEvent e) {
-            ButtonModel buttonModel = origin.getButtonGroup().getSelection();
-            origin.getButtonGroup().isSelected(buttonModel);
-            buttonModel.
-            if(origin.getButtonGroup().getSelection())
-            System.out.println(origin.getButtonGroup().getSelection());
+            ButtonModel selectedModel = origin.getButtonGroup().getSelection();
+            if (selectedModel == null) {
+                return;
+            }
+            StringBuilder sb = new StringBuilder("SELECT ");
+            final String leftTable = JoinPanel.this.leftTable.getSelectedItem().toString();
+            final String rightTable = JoinPanel.this.rightTable.getSelectedItem().toString();
+            final List<Column> leftColumns = DBTool.getInstance().getColumnNamesAndTypesWithoutKeys(leftTable);
+            final List<Column> rightColumns = DBTool.getInstance().getColumnNamesAndTypesWithoutKeys(rightTable);
+            final List<Key> leftKeys = DBTool.getInstance().getTableKeys(leftTable);
+            final List<Key> rightKeys = DBTool.getInstance().getTableKeys(rightTable);
+            sb.append(leftColumns.stream().map(Column::getField).collect(Collectors.joining(","))).append(",");
+            sb.append(rightColumns.stream().map(Column::getField).collect(Collectors.joining(","))).append(" FROM ").append(leftTable).append(" l");
+            if (selectedModel.equals(innerJoin.getModel())) {
+                sb.append(" INNER JOIN ").append(rightTable).append(" R ON ");
+            } else if (selectedModel.equals(leftJoin.getModel())) {
+                sb.append(" LEFT JOIN ").append(rightTable).append(" R ON ");
+            } else if (selectedModel.equals(rightJoin.getModel())) {
+                sb.append(" RIGHT JOIN ").append(rightTable).append(" R ON ");
+            } else if (selectedModel.equals(fullJoin.getModel())) {
+                sb.append(" FULL OUTER JOIN ").append(rightTable).append(" R ON ");
+            }
+            Key primaryKey = null;
+            Key foreignKey = null;
+            boolean match = false;
+            for (int n = 0; primaryKey == null; n++) {
+                if (leftKeys.get(n).isPrimaryKey()) {
+                    primaryKey = leftKeys.get(n);
+                    for (Key key : rightKeys) {
+                        if (!key.isPrimaryKey()&&key.getReferencedTable().equals(leftTable)
+                                && key.getReferenceTableKeyColumn().
+                                equals(primaryKey.getColumnName())) {
+                            foreignKey = key;
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!match) {
+                primaryKey = null;
+                foreignKey = null;
+                for (int n = 0; primaryKey==null;n++){
+                    if(rightKeys.get(n).isPrimaryKey()){
+                        primaryKey = rightKeys.get(n);
+                        for(Key key : leftKeys){
+                            if(!key.isPrimaryKey()&&key.getReferencedTable().equals(rightTable)&&key.getReferenceTableKeyColumn().equals(primaryKey.getColumnName())){
+                                foreignKey=key;
+                                match = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            }
+            if(!match){
+                return;
+            }
+            sb.append("L.").append(primaryKey.getColumnName()).append("=R.").append(foreignKey.getColumnName());
+            final SearchPanel leftSearchPanel = origin.getLeftSearchPanel();
+            final SearchPanel rightSearchPanel = origin.getRightSearchPanel();
+            if (leftSearchPanel.emptySelection && rightSearchPanel.emptySelection) {
+                System.out.println(sb);
+                table.setModel(DBTool.getInstance().executeSqlAndReturnTableModel(sb.toString()));
+            }
+            if (rightSearchPanel.emptySelection) {
+
+            }
+            final ButtonModel leftSelection = leftSearchPanel.radioButtons.getSelection();
+            final ButtonModel rightSelection = rightSearchPanel.radioButtons.getSelection();
+            //   if(leftSelection.equals())
         }
     }
 }
+//Select * from states s join water_body w on s.state_id=w.state_id where water_area > 5
