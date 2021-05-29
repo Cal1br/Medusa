@@ -55,7 +55,6 @@ public class ForeignKeyComboPair extends JPanel {
 
     //намира името на таблицата с което се идентифицира обекта, например име на човек
     //todo тука ще се направи така че да се вижда от Config как да се казва
-    @Deprecated
     private String findName(String tableName) {
         boolean autoSearch = false;
         Properties prop = new Properties();

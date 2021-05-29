@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-public class DBTool {
+final public class DBTool {
     //init метод който зарежда configa в strings
     //ще е хубаво да е singleton или да е static само, обаче при singleton не може да се избегне init метода. По-ООП е
-    private static DBTool reference = null;
+    private static DBTool reference = new DBTool(); //created statically
     private static Connection connection = null;
     private static PreparedStatement sqlStatement = null;
     private static ResultSet set = null;
@@ -74,9 +74,6 @@ public class DBTool {
     }
 
     public static DBTool getInstance() {
-        if (reference == null) {
-            reference = new DBTool();
-        }
         return reference;
     }
 
@@ -226,6 +223,26 @@ public class DBTool {
 
     public TableModel getModelForColumnsWhere(final String tableName, final String selectedColumn, final String text) {
         AbstractTableModel model = null;
+        final List<Column> columnList = getColumnNamesAndTypesWithoutKeys(tableName);
+        StringBuilder sql =  new StringBuilder("SELECT "); //iLike = ignoreCaseLike
+        for(Column column : columnList){
+            sql.append(column.getField()).append(",");
+        }
+        sql.append(" FROM " + tableName + " WHERE " + selectedColumn + " iLIKE '" + text + "%'");
+        try {
+            connection = getConnection();
+            sqlStatement = connection.prepareStatement(sql.toString());
+            set = sqlStatement.executeQuery();
+            model = new NotModel(set);
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return model;
+    }
+/*
+    public TableModel getModelForColumnsWhere(final String tableName, final String selectedColumn, final String text) {
+        AbstractTableModel model = null;
         //String sql = String.format("SELECT (%s) FROM "+tableName,columnNames.stream().collect(Collectors.joining(", ")));
         String sql = "SELECT * FROM " + tableName + " WHERE " + selectedColumn + " iLIKE '" + text + "%'"; //iLike = ignoreCaseLike
         try {
@@ -238,7 +255,7 @@ public class DBTool {
             exception.printStackTrace();
         }
         return model;
-    }
+    }*/
 
     public TableModel getModelForColumns(final CRUDPanel origin) {
         AbstractTableModel model = null;

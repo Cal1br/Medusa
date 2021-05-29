@@ -7,6 +7,7 @@ import utils.DBTool;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -56,14 +57,14 @@ public class JoinPanel extends JPanel {
         buttonGroup.add(rightJoin);
         searchPanelsHolder.add(leftSearchPanel);
         searchPanelsHolder.add(rightSearchPanel);
-        searchPanelsHolder.setMaximumSize(new Dimension(750,50));
-        searchPanelsHolder.setBorder(new EmptyBorder(20,5,15,5));
+        searchPanelsHolder.setMaximumSize(new Dimension(750, 50));
+        searchPanelsHolder.setBorder(new EmptyBorder(20, 5, 15, 5));
         topPanel.add(left);
         topPanel.add(middle);
         topPanel.add(right);
         topPanel.setMaximumSize(new Dimension(650, 35));
         midPanel.add(joinSearchButton);
-        joinSearchButton.setPreferredSize(new Dimension(670,20));
+        joinSearchButton.setPreferredSize(new Dimension(670, 20));
         joinSearchButton.addActionListener(new SearchAction(this));
         this.add(topPanel);
         this.add(searchPanelsHolder);
@@ -193,8 +194,15 @@ public class JoinPanel extends JPanel {
         private class selectionListener implements java.awt.event.ItemListener {
             @Override
             public void itemStateChanged(final ItemEvent e) {
-                if (columnComboBox.getSelectedItem() != null && !columnComboBox.getSelectedItem().toString().equals("")) {
+                final JComboBox<String> source = (JComboBox<String>) e.getSource();
+                if (columnComboBox.getSelectedItem() != null && !columnComboBox.getSelectedItem().toString().equals("")) { //имаме избрана колона в search combo box-a
                     emptySelection = false;
+                    if (rightSearchPanel.columnComboBox.equals(source)){
+                        rightSearchPanel.searchField.setEditable(true);
+                    }
+                    else if(leftSearchPanel.columnComboBox.equals(source)){
+                        leftSearchPanel.searchField.setEditable(true);
+                    }
                     Column selectedColumn = columnList.get(columnComboBox.getSelectedIndex() - 1);
                     switch (selectedColumn.getType()) {
                         case DECIMAL:
@@ -203,17 +211,23 @@ public class JoinPanel extends JPanel {
                         case INTEGER:
                         case TINYINT:
                             radioHolder.setVisible(true);
-                            emptySelection = false;
                             break;
                         default:
                             radioButtons.clearSelection();
-                            emptySelection = false;
                             radioHolder.setVisible(false);
                     }
 
                 } else {
                     radioHolder.setVisible(false);
                     emptySelection = true;
+                    if (rightSearchPanel.columnComboBox.equals(source)){
+                        rightSearchPanel.searchField.setText(null);
+                        rightSearchPanel.searchField.setEditable(false);
+                    }
+                    else if(leftSearchPanel.columnComboBox.equals(source)){
+                        leftSearchPanel.searchField.setText(null); //трием textFielda
+                        leftSearchPanel.searchField.setEditable(false); //не може да редактираме текста
+                    }
                 }
             }
         }
@@ -245,22 +259,13 @@ public class JoinPanel extends JPanel {
             if (selectedModel == null) {
                 return;
             }
-            StringBuilder sb = new StringBuilder("SELECT ");
             final String leftTable = JoinPanel.this.leftTable.getSelectedItem().toString();
             final String rightTable = JoinPanel.this.rightTable.getSelectedItem().toString();
             final List<Column> leftColumns = DBTool.getInstance().getColumnNamesAndTypesWithoutKeys(leftTable);
             final List<Column> rightColumns = DBTool.getInstance().getColumnNamesAndTypesWithoutKeys(rightTable);
             final List<Key> leftKeys = DBTool.getInstance().getTableKeys(leftTable);
             final List<Key> rightKeys = DBTool.getInstance().getTableKeys(rightTable);
-            sb.append(leftColumns.stream().map(Column::getField).collect(Collectors.joining(","))).append(",");
-            sb.append(rightColumns.stream().map(Column::getField).collect(Collectors.joining(","))).append(" FROM ").append(leftTable).append(" l");
-            if (selectedModel.equals(innerJoin.getModel())) {
-                sb.append(" INNER JOIN ").append(rightTable).append(" R ON ");
-            } else if (selectedModel.equals(leftJoin.getModel())) {
-                sb.append(" LEFT JOIN ").append(rightTable).append(" R ON ");
-            } else if (selectedModel.equals(rightJoin.getModel())) {
-                sb.append(" RIGHT JOIN ").append(rightTable).append(" R ON ");
-            }
+
             Key primaryKey = null;
             Key foreignKey = null;
             boolean match = false;
@@ -296,40 +301,56 @@ public class JoinPanel extends JPanel {
 
             }
             if (!match) {
+                table.setModel(new DefaultTableModel()); //изчистваме таблицата
                 return;
+            }
+            //Като видим че всичко е наред, продължаваме и почваме да строим SQL заявката
+            StringBuilder sb = new StringBuilder("SELECT ");
+            sb.append(leftColumns.stream().map(Column::getField).collect(Collectors.joining(","))).append(",");
+            sb.append(rightColumns.stream().map(Column::getField).collect(Collectors.joining(","))).append(" FROM ").append(leftTable).append(" l");
+            if (selectedModel.equals(innerJoin.getModel())) {
+                sb.append(" INNER JOIN ").append(rightTable).append(" R ON ");
+            } else if (selectedModel.equals(leftJoin.getModel())) {
+                sb.append(" LEFT JOIN ").append(rightTable).append(" R ON ");
+            } else if (selectedModel.equals(rightJoin.getModel())) {
+                sb.append(" RIGHT JOIN ").append(rightTable).append(" R ON ");
             }
             sb.append("L.").append(primaryKey.getColumnName()).append("=R.").append(foreignKey.getColumnName());
             final SearchPanel leftSearchPanel = origin.getLeftSearchPanel();
             final SearchPanel rightSearchPanel = origin.getRightSearchPanel();
-            if (leftSearchPanel.emptySelection && rightSearchPanel.emptySelection) {
-                System.out.println(sb);
+            if ((leftSearchPanel.emptySelection && rightSearchPanel.emptySelection)||
+                    (leftSearchPanel.searchField.getText().equals("")&&rightSearchPanel.searchField.getText().equals(""))) {
                 table.setModel(DBTool.getInstance().executeSqlAndReturnTableModel(sb.toString()));
-            }
-            if (!leftSearchPanel.emptySelection || !rightSearchPanel.emptySelection) { //АКО ЕДНО ОТ ТЯХ НЕ Е EMPTY
+                System.out.println(sb);
+            } //why wasn't this else if?
+            else if(!leftSearchPanel.searchField.getText().equals("")||!rightSearchPanel.searchField.getText().equals("")){ //АКО ЕДНО ОТ ТЯХ НЕ Е EMPTY И ИМА VALUE
                 sb.append(" WHERE "); //ТОГАВА КЪДЕТО
                 boolean and = false;
                 if (!leftSearchPanel.emptySelection) { //ПРОВЕРЯВАМЕ ЛЕВИЯ
                     final String selectedColumn = leftSearchPanel.getColumnComboBox().getSelectedItem().toString();
                     FilterChecker(sb, leftSearchPanel, selectedColumn);
                     and = true;
-                }if (!rightSearchPanel.emptySelection){ //ПРОВЕРЯВАМЕ ДЕСНИЯ
+                }
+                if (!rightSearchPanel.emptySelection) { //ПРОВЕРЯВАМЕ ДЕСНИЯ
                     final String selectedColumn = rightSearchPanel.getColumnComboBox().getSelectedItem().toString();
-                    if(and) sb.append(" AND ");
+                    if (and) sb.append(" AND ");
                     FilterChecker(sb, rightSearchPanel, selectedColumn);
 
                 }
+                System.out.println(sb);
                 table.setModel(DBTool.getInstance().executeSqlAndReturnTableModel(sb.toString()));
             }
             //   if(leftSelection.equals())
         }
 
-        private void FilterChecker(final StringBuilder sb, final SearchPanel rightSearchPanel, final String selectedColumn) {
-            if (rightSearchPanel.getRadioButtons().getSelection() == null) {
-                sb.append(selectedColumn).append(" iLIKE '").append(rightSearchPanel.getSearchField().getText()).append("%'");
+        private void FilterChecker(final StringBuilder sb, final SearchPanel searchPanel, final String selectedColumn) {
+            if(searchPanel.getSearchField().getText().equals("")) return;
+            else if (searchPanel.getRadioButtons().getSelection() == null) {
+                sb.append(selectedColumn).append(" iLIKE '").append(searchPanel.getSearchField().getText()).append("%'");
             } else {
                 sb.append(selectedColumn);
-                SearchPanel panel = rightSearchPanel;
-                final ButtonModel selection = rightSearchPanel.getRadioButtons().getSelection();
+                final SearchPanel panel = searchPanel;
+                final ButtonModel selection = searchPanel.getRadioButtons().getSelection();
                 if (selection.equals(panel.getEqual().getModel())) {
                     sb.append("=").append(panel.getSearchField().getText());
                 } else if (selection.equals(panel.getLess().getModel())) {

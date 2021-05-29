@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExperimentalModel extends AbstractTableModel {
-    private ResultSet resultSet;
-    private ResultSetMetaData metaData;
-    private int columnCount;
-    private List<Object[]> objectList = new ArrayList<>();
-    private List<Long> idList = new ArrayList<>();
+    private static final String SQL_ERROR = "SQL ERROR";
+    private final ResultSetMetaData metaData;
+    private final int columnCount;
+    private final List<Object[]> objectList = new ArrayList<>();
+    private final List<Long> idList = new ArrayList<>();
     private int rowCount;
     private boolean idListPresent;
 
@@ -20,7 +20,6 @@ public class ExperimentalModel extends AbstractTableModel {
      * Модел който очаква да му бъдат дадени всичките данни които да се покажат в таблицата, обаче първата колона трябва винаги да съдържа id-tata
      */
     public ExperimentalModel(final ResultSet resultSet) throws SQLException {
-        this.resultSet = resultSet;
         this.metaData = resultSet.getMetaData();
         columnCount = metaData.getColumnCount();
         this.rowCount = 0;
@@ -62,7 +61,7 @@ public class ExperimentalModel extends AbstractTableModel {
             return metaData.getColumnName(column + 2);
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
-            return "SQL ERROR";
+            return SQL_ERROR;
         }
     }
 }
